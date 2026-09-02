@@ -1,8 +1,8 @@
-# Vita-OS
+# Xray_OS
 <img src="https://images2.imgbox.com/07/c0/shcL3xwb_o.png" width="300"/>
 
 ## Overview
-Vita-OS is an Arch Linux distribution designed specifically to be free from any external influences from 
+Xray_OS is an Arch Linux distribution designed specifically to be free from any external influences from 
 corporate conglomerates or any special interest groups that profess false freedom and impose barriers 
 disguised as "Community guidelines" or a "Code of conduct" upon their users, along with other intrusive 
 practices like forcing ideological advertisements or pop-ups during application use.
@@ -23,8 +23,8 @@ We support:
 As long as our users want something in our repositories, we will include it. We are not going to forbid the use of quality software or restrict "incorrect" opinions. TLDR: We do not censor.
 
 ## Support
-- **Report an Issue**: https://github.com/vita-linux/vita-os/issues
-- **Project Page**:    [SourceForge](https://sourceforge.net/projects/vita-os/)
+- **Report an Issue**: https://github.com/xray-os/xray-os-live-iso/issues
+- **Project Page**:    [SourceForge](https://sourceforge.net/projects/xray-os/)
 
 ## Contributing
 It's not time yet for me to asking about donations or help, if you like my personal Linux OS, then use it and 
