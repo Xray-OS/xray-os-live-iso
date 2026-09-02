@@ -338,12 +338,12 @@ echo
 	if [[ "$xlibre" == "true" ]]; then
 
 		# Import xlibre key
-		if ! sudo arch-chroot $buildFolder/archiso/airootfs pacman-key -f 73580DE2EDDFA6D6 &> /dev/null; then
+		if ! sudo arch-chroot $buildFolder/archiso/airootfs pacman-key -f B97F7C613F359424 &> /dev/null; then
 			echo "Importing xlibre GPG key"
 			sudo arch-chroot $buildFolder/archiso/airootfs /bin/bash -c "
-				curl -sS https://x11libre.net/repo/arch_based/x86_64/0x73580DE2EDDFA6D6.gpg | gpg --import -
-				pacman-key --recv-keys 73580DE2EDDFA6D6
-				pacman-key --lsign-key 73580DE2EDDFA6D6
+				curl -sS https://xlibre-arch.github.io/xlibre-archlinux.asc | pacman-key --add -
+				pacman-key --recv-keys B97F7C613F359424 || true
+				pacman-key --lsign-key B97F7C613F359424 || true
 			"
 		fi
 
@@ -351,7 +351,7 @@ echo
 		if ! grep -q '\[xlibre\]' $buildFolder/archiso/airootfs/etc/pacman.conf; then
 			echo "Adding xlibre repository"
 			echo '[xlibre]' | sudo tee -a $buildFolder/archiso/airootfs/etc/pacman.conf
-			echo 'Server = https://x11libre.net/repo/arch_based/x86_64/' | sudo tee -a $buildFolder/archiso/airootfs/etc/pacman.conf
+			echo 'Server = https://packages.xlibre.net/arch/stable/$arch' | sudo tee -a $buildFolder/archiso/airootfs/etc/pacman.conf
 		fi
 	fi
 

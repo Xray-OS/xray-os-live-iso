@@ -463,17 +463,17 @@ log_info "Initializing host pacman keyring..."
 sudo pacman-key --init
 
 if [[ "$xlibre" == "true" ]]; then
-    if ! sudo pacman-key -f 73580DE2EDDFA6D6 &>/dev/null; then
+    if ! sudo pacman-key -f B97F7C613F359424 &>/dev/null; then
         log_info "Importing xlibre GPG key..."
-        curl -sS https://x11libre.net/repo/arch_based/x86_64/0x73580DE2EDDFA6D6.gpg | sudo pacman-key --add -
-        sudo pacman-key --recv-keys 73580DE2EDDFA6D6 || true
-        sudo pacman-key --lsign-key 73580DE2EDDFA6D6 || true
+        curl -sS https://xlibre-arch.github.io/xlibre-archlinux.asc | sudo pacman-key --add -
+        sudo pacman-key --recv-keys B97F7C613F359424 || true
+        sudo pacman-key --lsign-key B97F7C613F359424 || true
     fi
 
     pacman_conf_target="$buildFolder/archiso/airootfs/etc/pacman.conf"
     if [[ -f "$pacman_conf_target" ]] && ! grep -q '\[xlibre\]' "$pacman_conf_target"; then
         log_info "Adding [xlibre] repository to build pacman.conf..."
-        printf '\n[xlibre]\nServer = https://x11libre.net/repo/arch_based/x86_64/\n' | sudo tee -a "$pacman_conf_target" >/dev/null
+        printf '\n[xlibre]\nServer = https://packages.xlibre.net/arch/stable/$arch\n' | sudo tee -a "$pacman_conf_target" >/dev/null
     fi
 fi
 
