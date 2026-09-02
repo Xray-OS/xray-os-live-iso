@@ -182,6 +182,20 @@ remove_buildfolder() {
 
     if [[ "$choice" == "yes" ]]; then
         if [[ -d "$buildFolder" ]]; then
+            log_info "Unmounting any active chroot mounts in ($buildFolder)..."
+            if command -v findmnt >/dev/null 2>&1; then
+                findmnt -rnlo TARGET "$buildFolder" 2>/dev/null | sort -r | while IFS= read -r mnt; do
+                    if [[ -n "$mnt" && "$mnt" != "$buildFolder" ]]; then
+                        sudo umount -lf "$mnt" 2>/dev/null || true
+                    fi
+                done
+            fi
+            awk -v dir="$buildFolder" '$2 ~ "^" dir {print $2}' /proc/mounts 2>/dev/null | sort -r | while IFS= read -r mnt; do
+                if [[ -n "$mnt" ]]; then
+                    sudo umount -lf "$mnt" 2>/dev/null || true
+                fi
+            done
+
             log_info "Deleting build folder ($buildFolder)..."
             sudo rm -rf "$buildFolder"
             log_success "Build folder deleted."
