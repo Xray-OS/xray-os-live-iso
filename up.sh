@@ -108,8 +108,8 @@ ensure_git_remote_configured() {
         exit 1
     fi
     remote_url="$(git -C "${SCRIPT_DIR}" remote get-url origin 2>/dev/null || true)"
-    if [[ "${remote_url}" != git@gitlab.com:xr-os/* ]]; then
-        log_warn "Git remote is not SSH for xr-os (${remote_url:-unset}) — running setup.sh to fix"
+    if [[ "${remote_url}" != git@gitlab.com:xr-os/* && "${remote_url}" != git@github.com:Xray-OS/* ]]; then
+        log_warn "Git remote is not configured for Xray-OS (${remote_url:-unset}) — running setup.sh to fix"
         bash "${SCRIPT_DIR}/setup.sh"
     fi
 }

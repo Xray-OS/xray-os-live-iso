@@ -97,21 +97,18 @@ configure_git() {
     fi
     git config --global push.default simple
 
-    if [[ "${SCRIPT_DIR}" =~ [Xx][Rr][Aa][Yy] || "${SCRIPT_DIR}" == */DATA*/* ]]; then
-        log_info "https://github.com/xr-os/${project}"
+    if [[ "${SCRIPT_DIR}" == *"-github"* || "${SCRIPT_DIR}" == *"/github"* ]]; then
+        log_info "https://github.com/Xray-OS/${project}"
         git -C "${SCRIPT_DIR}" config --local user.name "Xray_OS"
         git -C "${SCRIPT_DIR}" config --local user.email "xray_osh@proton.me"
-
-        # Fixed syntax error: swapped $(project) with ${project}
-        git -C "${SCRIPT_DIR}" remote set-url origin "git@github.com:xr-os/${project}.git"
-
-        log_success "Git configured — remote set to git@github.com:xr-os/${project}.git"
-    # elif [[ "${SCRIPT_DIR}" == *"/KIRO"* ]]; then
-    #     log_info "https://github.com/kirodubes/${project}"
-    #     git -C "${SCRIPT_DIR}" config --local user.name "Kiro Dubes"
-    #     git -C "${SCRIPT_DIR}" config --local user.email "kirodubes@gmail.com"
-    #     git -C "${SCRIPT_DIR}" remote set-url origin "git@github.com-kiro:kirodubes/${project}"
-    #     log_success "Git configured — remote set to git@github.com-kiro:kirodubes/${project}"
+        git -C "${SCRIPT_DIR}" remote set-url origin "git@github.com:Xray-OS/${project}.git"
+        log_success "Git configured — remote set to git@github.com:Xray-OS/${project}.git"
+    elif [[ "${SCRIPT_DIR}" =~ [Xx][Rr][Aa][Yy] || "${SCRIPT_DIR}" == */DATA*/* ]]; then
+        log_info "https://gitlab.com/xr-os/${project}"
+        git -C "${SCRIPT_DIR}" config --local user.name "Xray_OS"
+        git -C "${SCRIPT_DIR}" config --local user.email "xray_osh@proton.me"
+        git -C "${SCRIPT_DIR}" remote set-url origin "git@gitlab.com:xr-os/${project}.git"
+        log_success "Git configured — remote set to git@gitlab.com:xr-os/${project}.git"
     else
         log_error "Cannot determine identity — path contains neither XRAY nor DATA: ${SCRIPT_DIR}"
         exit 1
