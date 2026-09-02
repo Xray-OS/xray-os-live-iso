@@ -1,662 +1,822 @@
-#!/bin/bash
-#set -e
-#tput setaf 0 = black 
-#tput setaf 1 = red 
-#tput setaf 2 = green
-#tput setaf 3 = yellow 
-#tput setaf 4 = dark blue 
-#tput setaf 5 = purple
-#tput setaf 6 = cyan 
-#tput setaf 7 = gray 
-#tput setaf 8 = light blue
-##################################################################################################################
-##################################################################################################################
+#!/usr/bin/env bash
 #
-#   DO NOT JUST RUN THIS. EXAMINE AND JUDGE. RUN AT YOUR OWN RISK.
+# Xray_OS ISO Build Script
+# 
+# Usage:
+#   ./build-the-iso.sh [OPTIONS]
 #
-##################################################################################################################
-# Funtions
+# Options:
+#   -d, --desktop <name>        Desktop environment: xfce | plasma | gnome | sonicde (default: xfce)
+#   -l, --login-manager <name>  Login manager: sddm | plasma-login-manager | gdm | lightdm | sonic-login-manager (default: sddm)
+#   -a, --audio <server>        Audio subsystem: pipewire | pulseaudio (default: pipewire)
+#   -v, --version <string>      ISO version tag (default: v26.02.16.01)
+#   --iso-name <string>         ISO base name (default: xray)
+#   --xlibre                    Enable xlibre display protocol packages
+#   --no-xlibre                 Disable xlibre (use xorg) (default)
+#   --chaotic                   Enable Chaotic-AUR repositories (default)
+#   --no-chaotic                Disable Chaotic-AUR repositories
+#   --clean-cache               Clean pacman cache before build
+#   --remove-build              Remove build directory after successful ISO generation
+#   -y, --yes, --no-confirm     Non-interactive mode (skip countdowns and prompts)
+#   -h, --help                  Show this help message and exit
+#
 
-echo "##################################################################"
-tput setaf 2
-echo "First run the version script"
-tput sgr0
-echo "##################################################################"
+set -euo pipefail
 
-sleep 2
+##################################################################################
+# Environment & Path Resolution
+##################################################################################
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+ARCHISO_SRC="${PROJECT_DIR}/archiso"
+
+##################################################################################
+# Terminal Colors & Styling
+##################################################################################
+
+if [[ -t 1 ]] && command -v tput >/dev/null 2>&1; then
+    RED="$(tput setaf 1 2>/dev/null || true)"
+    GREEN="$(tput setaf 2 2>/dev/null || true)"
+    YELLOW="$(tput setaf 3 2>/dev/null || true)"
+    BLUE="$(tput setaf 4 2>/dev/null || true)"
+    MAGENTA="$(tput setaf 5 2>/dev/null || true)"
+    CYAN="$(tput setaf 6 2>/dev/null || true)"
+    BOLD="$(tput bold 2>/dev/null || true)"
+    RESET="$(tput sgr0 2>/dev/null || true)"
+else
+    RED="" GREEN="" YELLOW="" BLUE="" MAGENTA="" CYAN="" BOLD="" RESET=""
+fi
+
+##################################################################################
+# Logging Helpers
+##################################################################################
+
+log_section() {
+    echo
+    echo "${GREEN}##################################################################${RESET}"
+    echo "${BOLD}${GREEN}$1${RESET}"
+    echo "${GREEN}##################################################################${RESET}"
+    echo
+}
+
+log_phase() {
+    local phase_num="$1"
+    local phase_title="$2"
+    echo
+    echo "${GREEN}##################################################################${RESET}"
+    echo "${BOLD}${GREEN}Phase ${phase_num} : ${phase_title}${RESET}"
+    echo "${GREEN}##################################################################${RESET}"
+    echo
+}
+
+log_info() {
+    echo "${CYAN}[INFO]${RESET} $1"
+}
+
+log_warn() {
+    echo "${YELLOW}[WARN]${RESET} $1"
+}
+
+log_error() {
+    echo "${RED}[ERROR]${RESET} $1" >&2
+}
+
+log_success() {
+    echo "${GREEN}[SUCCESS]${RESET} $1"
+}
+
+##################################################################################
+# Error Trap
+##################################################################################
+
+on_error() {
+    local lineno="$1"
+    local cmd="$2"
+    local exit_code="$3"
+    echo
+    echo "${RED}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!${RESET}" >&2
+    echo "${BOLD}${RED}[FATAL ERROR] Command failed on line ${lineno} with exit code ${exit_code}${RESET}" >&2
+    echo "${RED}Command: ${cmd}${RESET}" >&2
+    echo "${RED}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!${RESET}" >&2
+    echo
+}
+trap 'on_error "$LINENO" "$BASH_COMMAND" "$?"' ERR
+
+##################################################################################
+# ACL State & Restoration
+##################################################################################
+
+ACL_BACKUP_FILE=""
+HAS_ACLS=false
+SUDO_KEEP_ALIVE_PID=""
+
+restore_acls() {
+    if [[ -n "${ACL_BACKUP_FILE:-}" && -f "${ACL_BACKUP_FILE:-}" ]]; then
+        log_info "Restoring default ACLs on home directory from backup..."
+        setfacl --restore="$ACL_BACKUP_FILE" 2>/dev/null || true
+        rm -f "$ACL_BACKUP_FILE"
+        log_info "ACLs restored."
+    fi
+}
+
+cleanup_exit() {
+    if [[ -n "${SUDO_KEEP_ALIVE_PID:-}" ]]; then
+        kill "$SUDO_KEEP_ALIVE_PID" 2>/dev/null || true
+    fi
+    restore_acls
+}
+trap cleanup_exit EXIT INT TERM
+
+##################################################################################
+# Helper Functions
+##################################################################################
+
+show_help() {
+    cat <<EOF
+${BOLD}Xray_OS ISO Builder${RESET}
+
+${BOLD}USAGE:${RESET}
+  ./build-the-iso.sh [OPTIONS]
+
+${BOLD}OPTIONS:${RESET}
+  -d, --desktop <name>        Desktop environment: xfce | plasma | gnome | sonicde (default: xfce)
+  -l, --login-manager <name>  Login manager: sddm | plasma-login-manager | gdm | lightdm | sonic-login-manager (default: sddm)
+  -a, --audio <server>        Audio subsystem: pipewire | pulseaudio (default: pipewire)
+  -v, --version <string>      ISO version string (default: v26.02.16.01)
+  --iso-name <string>         ISO base name (default: xray)
+  --xlibre                    Replace Xorg with xlibre display packages
+  --no-xlibre                 Do not use xlibre (default)
+  --chaotic                   Enable Chaotic-AUR repositories (default)
+  --no-chaotic                Disable Chaotic-AUR repositories
+  --clean-cache               Run pacman cache cleaning before build
+  --remove-build              Remove build folder upon successful completion
+  -y, --yes, --no-confirm     Skip interactive wait timers
+  -h, --help                  Show this help message and exit
+
+EOF
+}
 
 clean_cache() {
-    if [[ "$1" == "yes" ]]; then
-    	echo "##################################################################"
-    	tput setaf 2
-        echo "Cleaning the cache from /var/cache/pacman/pkg/"
-        tput sgr0
-        echo "##################################################################"
-        yes | sudo pacman -Scc
-    elif [[ "$1" == "no" ]]; then
-        echo "Skipping cache cleaning."
+    local choice="$1"
+    if [[ "$choice" == "yes" ]]; then
+        log_info "Cleaning pacman package cache from /var/cache/pacman/pkg/..."
+        sudo pacman -Scc --noconfirm
     else
-        echo "Invalid option. Use: clean_cache yes | clean_cache no"
+        log_info "Skipping pacman cache cleaning."
     fi
 }
 
 remove_buildfolder() {
-
-    if [[ -z "$buildFolder" ]]; then
-        echo "Error: \$buildFolder is not set. Please define it before using this function."
+    local choice="$1"
+    if [[ -z "${buildFolder:-}" ]]; then
+        log_error "\$buildFolder is not set."
         return 1
     fi
 
-    if [[ "$1" == "yes" ]]; then
+    # Safety check against dangerous deletions
+    if [[ "$buildFolder" == "/" || "$buildFolder" == "$HOME" || "$buildFolder" == "/home" ]]; then
+        log_error "Refusing to delete unsafe directory: $buildFolder"
+        return 1
+    fi
+
+    if [[ "$choice" == "yes" ]]; then
         if [[ -d "$buildFolder" ]]; then
-        	echo "##################################################################"
-    		tput setaf 3
-            echo "Deleting the build folder ($buildFolder) - this may take some time..."
-            tput sgr0
+            log_info "Deleting build folder ($buildFolder)..."
             sudo rm -rf "$buildFolder"
-            echo "##################################################################"
+            log_success "Build folder deleted."
         else
-        	echo "##################################################################"
-            echo "No build folder found. Nothing to delete."
-            echo "##################################################################"
+            log_info "No build folder found at $buildFolder. Nothing to delete."
         fi
-    elif [[ "$1" == "no" ]]; then
-        echo "Skipping build folder removal."
     else
-        echo "Invalid option. Use: remove_buildfolder yes | remove_buildfolder no"
+        log_info "Skipping build folder removal."
     fi
 }
 
-installed_dir=$(dirname $(readlink -f $(basename `pwd`)))
+safe_download() {
+    local url="$1"
+    local dest="$2"
+    local description="$3"
 
-echo
-echo "################################################################## "
-tput setaf 3
-echo "Message (Credits to Erik from Angel G.)"
-echo
-echo "Do not run this file as root or add sudo in front"
-echo "Run this script as a user"
-echo
-echo "You can add a personal local repo to the iso build if you want"
-echo "https://www.youtube.com/watch?v=TqFuLknCsUE"
-echo
-echo "You can learn to create your own iso on the basis of Kiro"
-echo "That project is called Buildra"
-echo "https://youtu.be/3jdKH6bLgUE"
-echo "https://youtu.be/mH52To8DvlI"
-tput sgr0
-echo "################################################################## "
-echo
+    log_info "Downloading latest ${description}..."
+    local dest_dir
+    dest_dir="$(dirname -- "$dest")"
+    mkdir -p "$dest_dir"
 
-sleep 3
+    local temp_dest="${dest}.download.$$"
+    if curl -fSL --connect-timeout 10 --retry 3 "$url" -o "$temp_dest" 2>/dev/null || wget -q -T 10 -t 3 "$url" -O "$temp_dest" 2>/dev/null; then
+        mv -f "$temp_dest" "$dest"
+        log_success "Successfully updated ${description}."
+    else
+        rm -f "$temp_dest"
+        if [[ -f "$dest" ]]; then
+            log_warn "Failed to download from ${url}. Retaining existing local copy of ${description}."
+        else
+            log_error "Failed to download required asset ${description} from ${url}."
+            return 1
+        fi
+    fi
+}
 
-# message for BTRFS 
-if 	lsblk -f | grep btrfs > /dev/null 2>&1 ; then
-	echo
-	echo "################################################################## "
-	tput setaf 3
-	echo "Message"
-	echo
-    echo "This script may cause issues on a Btrfs filesystem"
-    echo "Make backups before continuing"
-    echo "Continue at your own risk"
-    echo
-    echo "Press CTRL + C to stop the script now"
-    tput sgr0
-    echo
-    for i in $(seq 10 -1 0); do
-    	echo -ne "Continuing in $i seconds... \r"
-    	sleep 1
-    done
-    echo
+##################################################################################
+# Default Configuration Settings
+##################################################################################
+
+desktop="xfce"
+login_manager="sddm"
+audio="pipewire"
+xrayVersion="v26.02.16.01"
+iso_name="xray"
+
+chaoticsrepo=true
+xlibre=true
+sonicde=false
+installation_config_calamares=true
+nvidia_driver="open"
+
+clean_cache_opt="no"
+remove_build_opt="no"
+non_interactive=false
+
+buildFolder="${HOME}/xray-build"
+outFolder="${HOME}/xray-Out"
+
+##################################################################################
+# Parse CLI Options
+##################################################################################
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -d|--desktop)
+            desktop="${2:-}"
+            shift 2
+            ;;
+        -l|--login-manager)
+            login_manager="${2:-}"
+            shift 2
+            ;;
+        -a|--audio)
+            audio="${2:-}"
+            shift 2
+            ;;
+        -v|--version)
+            xrayVersion="${2:-}"
+            shift 2
+            ;;
+        --iso-name)
+            iso_name="${2:-}"
+            shift 2
+            ;;
+        --xlibre)
+            xlibre=true
+            shift
+            ;;
+        --no-xlibre)
+            xlibre=false
+            shift
+            ;;
+        --chaotic)
+            chaoticsrepo=true
+            shift
+            ;;
+        --no-chaotic)
+            chaoticsrepo=false
+            shift
+            ;;
+        --clean-cache)
+            clean_cache_opt="yes"
+            shift
+            ;;
+        --remove-build)
+            remove_build_opt="yes"
+            shift
+            ;;
+        -y|--yes|--no-confirm)
+            non_interactive=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            log_error "Unknown parameter: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Ensure script is not executed directly as root
+if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+    echo "Error: Do not run this script directly as root or with 'sudo ./build-the-iso.sh'." >&2
+    echo "Run as a regular user; sudo will be invoked where root permissions are required." >&2
+    exit 1
 fi
 
-echo
-echo "################################################################## "
-tput setaf 2
-echo "Phase 1 : "
-echo "- Setting General parameters"
-tput sgr0
-echo "################################################################## "
-echo
+# Validate choices
+case "$desktop" in
+    xfce|plasma|gnome|sonicde) ;;
+    *)
+        log_error "Invalid desktop: '$desktop'. Valid options: xfce | plasma | gnome | sonicde"
+        exit 1
+        ;;
+esac
 
-	#Let us set the desktop"
-	#First letter of desktop is small letter
+case "$login_manager" in
+    sddm|plasma-login-manager|gdm|lightdm|sonic-login-manager) ;;
+    *)
+        log_error "Invalid login manager: '$login_manager'. Valid options: sddm | plasma-login-manager | gdm | lightdm | sonic-login-manager"
+        exit 1
+        ;;
+esac
 
-	desktop="plasma"
+case "$audio" in
+    pipewire|pulseaudio) ;;
+    *)
+        log_error "Invalid audio option: '$audio'. Valid options: pipewire | pulseaudio"
+        exit 1
+        ;;
+esac
 
-	xrayVersion='v26.02.16.01'
+isoLabel="${iso_name}-${xrayVersion}-x86_64.iso"
 
-	isoLabel='xray-'$xrayVersion'-x86_64.iso'
+##################################################################################
+# Interactive Notice & BTRFS Check
+##################################################################################
 
-	# setting of the general parameters
-	archisoRequiredVersion="archiso 84-1"
-	buildFolder=$HOME"/xray-build"
-	outFolder=$HOME"/xray-Out"
-
-	# If you want to add packages from the chaotics-aur repo then
-	# change the variable to true and add the package names
-	# that are hosted on chaotics-aur in the packages.x86_64 at the bottom
-
-	chaoticsrepo=true
-	xlibre=false
-
-	if [[ "$chaoticsrepo" == "true" ]]; then
-	    if pacman -Q chaotic-keyring &>/dev/null && pacman -Q chaotic-mirrorlist &>/dev/null; then
-	        echo "################################################################## "
-			tput setaf 2
-			echo "Chaotic keyring and mirrorlist are both installed"
-			tput sgr0
-			echo "################################################################## "
-	    else
-	        if [[ -f "$installed_dir/get-the-keys-and-mirrors-chaotic-aur.sh" ]]; then
-	        	echo "################################################################## "
-				tput setaf 3
-				echo "Installing both Chaotic packages as we are missing"
-				echo "chaotic-keyring and chaotic-mirrorlist"
-    			echo "You can remove them later with pacman -R ..."
-				tput sgr0
-				echo "################################################################## "
-	            bash "$installed_dir/get-the-keys-and-mirrors-chaotic-aur.sh"
-	        else
-		        echo "################################################################## "
-				tput setaf 1
-				echo "Error: Installation script not found at $installed_dir"
-				tput sgr0
-				echo "################################################################## "          
-	            exit 1
-	        fi
-	    fi
-	fi
-	
-echo
-echo "################################################################## "
-tput setaf 2
-echo "Phase 1.5 :"
-echo "- Backing up home directory ACLs"
-tput sgr0
-echo "################################################################## "
+log_section "Xray_OS ISO Build Tool"
+echo "Credits: Erik Dubois (ArcoLinux/Buildra/Kiro), Angel G., Xray_OS Team"
 echo
 
-# Check if home directory has default ACLs
-if getfacl ~ 2>/dev/null | grep -q "default:"; then
-	echo "Default ACLs detected in home directory - backing up and removing temporarily"
+# Pre-authenticate sudo credentials
+log_info "Verifying sudo permissions..."
+sudo -v
 
-	# Backup current ACLs from home directory
-	ACL_BACKUP_FILE="/tmp/home_acl_backup_$$.txt"
-	getfacl -R ~ > "$ACL_BACKUP_FILE" 2>/dev/null
-	echo "ACLs backed up to $ACL_BACKUP_FILE"
+# Keep sudo credentials alive in background
+( while true; do sudo -v; sleep 60; done; ) 2>/dev/null &
+SUDO_KEEP_ALIVE_PID=$!
 
-	# Set trap to restore ACLs on exit/interrupt
-	restore_acls() {
-		if [ -f "$ACL_BACKUP_FILE" ]; then
-			echo
-			echo "Restoring ACLs from backup..."
-			setfacl --restore="$ACL_BACKUP_FILE" 2>/dev/null
-			rm -f "$ACL_BACKUP_FILE"
-			echo "ACLs restored"
-		fi
-	}
-	trap restore_acls EXIT INT TERM
+# BTRFS Notice
+if lsblk -f 2>/dev/null | grep -q "btrfs"; then
+    log_warn "Btrfs filesystem detected. Ensure sufficient free disk space and subvolume quota."
+    if [[ "$non_interactive" == "false" ]]; then
+        echo "Press CTRL+C within 5 seconds to abort..."
+        for i in {5..1}; do
+            echo -ne "Continuing in $i seconds...\r"
+            sleep 1
+        done
+        echo
+    fi
+fi
 
-	# Remove default ACLs from home to prevent inheritance
-	echo "temporarily removing default ACLs from home directory..."
-	setfacl -k ~
-	echo "Default ACLs removed"
-	HAS_ACLS=true
+##################################################################################
+# Phase 1: Environment & Repository Setup
+##################################################################################
+
+log_phase "1" "Setting Parameters & Repositories"
+
+log_info "Desktop Environment : $desktop"
+log_info "Login Manager       : $login_manager"
+log_info "Audio System        : $audio"
+log_info "ISO Base Name       : $iso_name"
+log_info "ISO Version Tag     : $xrayVersion"
+log_info "Expected ISO Output : $isoLabel"
+log_info "Build Directory     : $buildFolder"
+log_info "Output Directory    : $outFolder"
+log_info "Chaotic-AUR Enabled : $chaoticsrepo"
+log_info "xlibre Enabled      : $xlibre"
+echo
+
+if [[ "$chaoticsrepo" == "true" ]]; then
+    if pacman -Q chaotic-keyring &>/dev/null && pacman -Q chaotic-mirrorlist &>/dev/null; then
+        log_success "Chaotic-AUR keyring and mirrorlist are installed on host."
+    else
+        local_keyring_script="${SCRIPT_DIR}/get-pacman-repos-keys-and-mirrors.sh"
+        if [[ -f "$local_keyring_script" ]]; then
+            log_info "Installing Chaotic-AUR keyring and mirrorlist using $local_keyring_script..."
+            bash "$local_keyring_script"
+        else
+            log_error "Chaotic-AUR setup script not found at $local_keyring_script"
+            exit 1
+        fi
+    fi
+fi
+
+##################################################################################
+# Phase 1.5: Home Directory ACL Management
+##################################################################################
+
+log_phase "1.5" "Checking Home Directory ACLs"
+
+if getfacl ~ 2>/dev/null | grep -q "^default:"; then
+    log_info "Default ACLs detected on $HOME — creating temporary backup to prevent inheritance..."
+    ACL_BACKUP_FILE="$(mktemp /tmp/home_acl_backup_XXXXXX.txt)"
+    getfacl -d ~ > "$ACL_BACKUP_FILE" 2>/dev/null || true
+    setfacl -k ~ 2>/dev/null || true
+    HAS_ACLS=true
+    log_success "Default ACLs temporarily stripped from $HOME."
 else
-	echo "No default ACLs found in home directory - skipping ACL management"
-	HAS_ACLS=false
-fi
-echo
-
-
-echo
-echo "################################################################## "
-tput setaf 2
-echo "Phase 2 :"
-echo "- Checking if archiso/grub is installed"
-echo "- Saving current archiso version to readme"
-tput sgr0
-echo "################################################################## "
-echo
-
-	package="archiso"
-
-	#----------------------------------------------------------------------------------
-
-	#checking if application is already installed or else install
-	if pacman -Qi $package &> /dev/null; then
-
-			echo "$package is already installed"
-
-	else
-
-		echo "################################################################"
-		echo "######### Installing $package with pacman"
-		echo "################################################################"
-
-		sudo pacman -S --noconfirm $package
-
-	fi
-
-	# Just checking if installation was successful
-	if pacman -Qi $package &> /dev/null; then
-
-		echo 
-
-	else
-
-		echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-		echo "!!!!!!!!!  "$package" has NOT been installed"
-		echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-		exit 1
-	fi
-
-	package="grub"
-
-	#----------------------------------------------------------------------------------
-
-	#checking if application is already installed or else install
-	if pacman -Qi $package &> /dev/null; then
-
-			echo "$package is already installed"
-
-	else
-
-		echo "################################################################"
-		echo "######### Installing $package with pacman"
-		echo "################################################################"
-
-		sudo pacman -S --noconfirm $package
-
-	fi
-
-	# Just checking if installation was successful
-	if pacman -Qi $package &> /dev/null; then
-
-		echo
-
-	else
-
-		echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-		echo "!!!!!!!!!  "$package" has NOT been installed"
-		echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-		exit 1
-	fi
-
-	# overview
-	
-	echo "################################################################## "
-	tput setaf 2
-	echo "Overview"
-	tput sgr0
-	echo "################################################################## "
-	echo "Building the desktop                   : "$desktop
-	echo "Building version                       : "$xrayVersion
-	echo "Iso label                              : "$isoLabel
-	echo "Build folder                           : "$buildFolder
-	echo "Out folder                             : "$outFolder
-	echo "################################################################## "
-	echo
-
-echo
-echo "################################################################## "
-tput setaf 2
-echo "Phase 3 :"
-echo "- Deleting the build folder if one exists"
-echo "- Copying the Archiso folder to build folder"
-tput sgr0
-echo "################################################################## "
-echo
-
-	remove_buildfolder yes
-	echo
-	echo "Copying the Archiso folder to build work"
-	echo
-	mkdir $buildFolder
-	cp -r ../archiso $buildFolder/archiso
-
-echo "################################################################## "
-tput setaf 2
-echo "Phase 4 :"
-echo "- Importing xlibre key if enabled"
-tput sgr0
-echo "################################################################## "
-echo
-	
-	if [[ "$xlibre" == "true" ]]; then
-
-		# Import xlibre key
-		if ! sudo arch-chroot $buildFolder/archiso/airootfs pacman-key -f 73580DE2EDDFA6D6 &> /dev/null; then
-			echo "Importing xlibre GPG key"
-			sudo arch-chroot $buildFolder/archiso/airootfs /bin/bash -c "
-				curl -sS https://x11libre.net/repo/arch_based/x86_64/0x73580DE2EDDFA6D6.gpg | gpg --import -
-				pacman-key --recv-keys 73580DE2EDDFA6D6
-				pacman-key --lsign-key 73580DE2EDDFA6D6
-			"
-		fi
-
-		# Add xlibre repo
-		if ! grep -q '\[xlibre\]' $buildFolder/archiso/airootfs/etc/pacman.conf; then
-			echo "Adding xlibre repository"
-			echo '[xlibre]' | sudo tee -a $buildFolder/archiso/airootfs/etc/pacman.conf
-			echo 'Server = https://x11libre.net/repo/arch_based/x86_64/' | sudo tee -a $buildFolder/archiso/airootfs/etc/pacman.conf
-		fi
-	fi
-
-echo "################################################################## "
-tput setaf 2
-echo "Phase 5 :"
-#echo "- Deleting any files in /etc/skel"
-#echo "- Getting the last version of bashrc in /etc/skel"
-echo "- Removing the old packages.x86_64 file from build folder"
-echo "- Copying the new packages.x86_64 file to the build folder"
-tput sgr0
-echo "################################################################## "
-echo
-
-	# echo "Deleting any files in /etc/skel"
-	# rm -rf $buildFolder/archiso/airootfs/etc/skel/.* 2> /dev/null
-	# echo
-
-	# echo "Getting the last version of bashrc in /etc/skel"
-	# echo
-	# wget https://raw.githubusercontent.com/erikdubois/edu-shells/refs/heads/main/etc/skel/.bashrc-latest -O $buildFolder/archiso/airootfs/etc/skel/.bashrc
-
-	echo "Removing the old packages.x86_64 file from build folder"
-	rm $buildFolder/archiso/packages.x86_64
-	echo
-
-	echo "Copying the new packages.x86_64 file to the build folder"
-	cp -f ../archiso/packages.x86_64 $buildFolder/archiso/packages.x86_64
-	echo
-
-	# Nvidia driver selection
-	# open | 580xx | 390xx
-	nvidia_driver="open"
-
- 	##############################################
- 	# Nvidia driver selection
- 	##############################################
-
- 	PACKAGES_FILE="$buildFolder/archiso/packages.x86_64"
-
-# 	case "$nvidia_driver" in
-#
-# 	    open)
-# 	    	echo
-# 			echo "################################################################## "
-# 			tput setaf 2
-# 			echo "Using NVIDIA open drivers"
-# 			tput sgr0
-# 			echo "################################################################## "
-# 			echo
-# 			sleep 2
-#
-# 	        # Ensure open drivers are present
-# 	        sed -i '/^nvidia-580xx/d' "$PACKAGES_FILE"
-# 	        sed -i '/^nvidia-390xx/d' "$PACKAGES_FILE"
-#
-# 	        sed -i '/^nvidia-open-dkms/d' "$PACKAGES_FILE"
-# 	        sed -i '/^nvidia-utils/d' "$PACKAGES_FILE"
-# 	        sed -i '/^nvidia-settings/d' "$PACKAGES_FILE"
-#
-# 	        echo "nvidia-open-dkms"   >> "$PACKAGES_FILE"
-# 	        echo "nvidia-utils"       >> "$PACKAGES_FILE"
-# 	        echo "nvidia-settings"    >> "$PACKAGES_FILE"
-# 	        ;;
-#
-# 	    580xx)
-# 	    	echo "################################################################## "
-# 			tput setaf 2
-# 			echo "Using NVIDIA 580xx legacy drivers"
-# 			tput sgr0
-# 			echo "################################################################## "
-# 			echo
-# 	        sleep 2
-#
-# 	        # Remove open drivers
-# 	        sed -i '/^nvidia-open-dkms/d' "$PACKAGES_FILE"
-# 	        sed -i '/^nvidia-utils/d' "$PACKAGES_FILE"
-# 	        sed -i '/^nvidia-settings/d' "$PACKAGES_FILE"
-#
-# 	        # Remove old 580xx entries if any
-# 	        sed -i '/^nvidia-580xx/d' "$PACKAGES_FILE"
-#
-# 	        # Add legacy drivers
-# 	        echo "nvidia-580xx-dkms"     >> "$PACKAGES_FILE"
-# 	        echo "nvidia-580xx-utils"    >> "$PACKAGES_FILE"
-# 	        echo "nvidia-580xx-settings" >> "$PACKAGES_FILE"
-# 	        ;;
-#
-# 	    390xx)
-# 	    	echo "################################################################## "
-# 			tput setaf 2
-# 			echo "Using NVIDIA 390xx legacy drivers"
-# 			tput sgr0
-# 			echo "################################################################## "
-# 			echo
-# 	        sleep 2
-#
-# 	        # Remove open drivers
-# 	        sed -i '/^nvidia-open-dkms/d' "$PACKAGES_FILE"
-# 	        sed -i '/^nvidia-utils/d' "$PACKAGES_FILE"
-# 	        sed -i '/^nvidia-settings/d' "$PACKAGES_FILE"
-#
-# 	        # Remove old 390xx entries if any
-# 	        sed -i '/^nvidia-390xx/d' "$PACKAGES_FILE"
-# 	        sed -i '/^nvidia-580xx/d' "$PACKAGES_FILE"
-#
-# 	        # Add legacy drivers
-# 	        echo "nvidia-390xx-dkms"     >> "$PACKAGES_FILE"
-# 	        echo "nvidia-390xx-utils"    >> "$PACKAGES_FILE"
-# 	        echo "nvidia-390xx-settings" >> "$PACKAGES_FILE"
-# 	        ;;
-# 	    *)
-# 	        echo "Unknown NVIDIA driver option: $nvidia_driver"
-# 	        echo "Valid options: open | 580xx | 390xx"
-# 	        exit 1
-# 	        ;;
-#
-# 	esac
-
-	# If building XFCE, comment out Plasma-specific packages
-	if [[ "$desktop" == "xfce4" ]]; then
-		echo "################################################################## "
-		tput setaf 3
-		echo "Commenting out Plasma packages for XFCE build"
-		tput sgr0
-		echo "################################################################## "
-
-		# Comment out specific packages
-		sed -i '/^xray-kde-settings/d' "$PACKAGES_FILE"
-		sed -i '/^plasma/d' "$PACKAGES_FILE"
-		sed -i '/^dolphin/d' "$PACKAGES_FILE"
-		sed -i '/^dolphin-plugins/d' "$PACKAGES_FILE"
-		sed -i '/^kio-admin/d' "$PACKAGES_FILE"
-		sed -i '/^kdegraphics-thumbnailers/d' "$PACKAGES_FILE"
-		sed -i '/^ark/d' "$PACKAGES_FILE"
-		sed -i '/^kcalc/d' "$PACKAGES_FILE"
-		sed -i '/^gwenview/d' "$PACKAGES_FILE"
-		sed -i '/^spectacle/d' "$PACKAGES_FILE"
-		sed -i '/^kdeconnect/d' "$PACKAGES_FILE"
-		sed -i '/^kwalletmanager/d' "$PACKAGES_FILE"
-		sed -i '/^konsole/d' "$PACKAGES_FILE"
-		sed -i '/^tolitica-plasma-theme/d' "$PACKAGES_FILE"
-		sed -i '/^xray-kde-dark/d' "$PACKAGES_FILE"
-		sed -i '/^arch-kde-theme/d' "$PACKAGES_FILE"
-		sed -i '/^dtos-kde-theme/d' "$PACKAGES_FILE"
-		sed -i '/^viper-kde-theme/d' "$PACKAGES_FILE"
-	fi
-
-	# If building PLASMA, comment out Xfce4-specific packages
-	if [[ "$desktop" == "plasma" ]]; then
-		echo "################################################################## "
-		tput setaf 3
-		echo "Commenting out Xfce4 packages for Plasma build"
-		tput sgr0
-		echo "################################################################## "
-
-		# Comment out specific packages xray-xfce-settings
-		sed -i '/^xfce4/d' "$PACKAGES_FILE"
-		sed -i '/^xfce4-goodies/d' "$PACKAGES_FILE"
-		sed -i '/^xray-xfce-settings/d' "$PACKAGES_FILE"
-		sed -i '/^gvfs/d' "$PACKAGES_FILE"
-		sed -i '/^gvfs-afc/d' "$PACKAGES_FILE"
-		sed -i '/^gvfs-gphoto2/d' "$PACKAGES_FILE"
-		sed -i '/^gvfs-mtp/d' "$PACKAGES_FILE"
-		sed -i '/^gvfs-nfs/d' "$PACKAGES_FILE"
-		sed -i '/^gvfs-smb/d' "$PACKAGES_FILE"
-		sed -i '/^gvfs-dnssd/d' "$PACKAGES_FILE"
-		sed -i '/^flameshot/d' "$PACKAGES_FILE"
-		sed -i '/^archlinux-tweak-tool-git/d' "$PACKAGES_FILE"
-		sed -i '/^variety/d' "$PACKAGES_FILE"
-		sed -i '/^vlc/d' "$PACKAGES_FILE"
-		sed -i '/^xcape/d' "$PACKAGES_FILE"
-		sed -i '/^arandr/d' "$PACKAGES_FILE"
-		sed -i '/^catfish/d' "$PACKAGES_FILE"
-		sed -i '/^evince/d' "$PACKAGES_FILE"
-		sed -i '/^file-roller/d' "$PACKAGES_FILE"
-		sed -i '/^gnome-disk-utility/d' "$PACKAGES_FILE"
-		sed -i '/^gnome-keyring/d' "$PACKAGES_FILE"
-		sed -i '/^gnome-screenshot/d' "$PACKAGES_FILE"
-		sed -i '/^nomacs/d' "$PACKAGES_FILE"
-		sed -i '/^playerctl/d' "$PACKAGES_FILE"
-		sed -i '/^polkit-gnome/d' "$PACKAGES_FILE"
-		sed -i '/^qt5ct/d' "$PACKAGES_FILE"
-		sed -i '/^gittyup/d' "$PACKAGES_FILE"
-		sed -i '/^hardcode-fixer-git/d' "$PACKAGES_FILE"
-		sed -i '/^mugshot/d' "$PACKAGES_FILE"
-		sed -i '/^autorandr/d' "$PACKAGES_FILE"
-		sed -i '/^volumeicon/d' "$PACKAGES_FILE"
-		sed -i '/^surfn-icons-git/d' "$PACKAGES_FILE"
-		sed -i '/^numix-icon-theme-git/d' "$PACKAGES_FILE"
-		sed -i '/^numix-circle-icon-theme-git/d' "$PACKAGES_FILE"
-		sed -i '/^sardi-icons/d' "$PACKAGES_FILE"
-	fi
-
-	# If xlibre is enabled, modify the package list
-	if [[ "$xlibre" == "true" ]]; then
-		echo "################################################################## "
-		tput setaf 3
-		echo "Modifying package list to replace xorg with xlibre if enabled"
-		tput sgr0
-		echo "################################################################## "
-
-		# Remove xorg server
-		sed -i '/^xorg-server/d' "$PACKAGES_FILE"
-
-		# Convert xf86-input-* to xlibre-input-*
-		sed -i 's/^xf86-input-/xlibre-input-/g' "$PACKAGES_FILE"
-
-		# Convert xf86-video-* to xlibre-video-*
-		sed -i 's/^xf86-video-/xlibre-video-/g' "$PACKAGES_FILE"
-
-		# Uncomment xlibre-specific packages
-		sed -i 's/^#xlibre-/xlibre-/g' "$PACKAGES_FILE"
-
-		echo "xf86 packages converted to xlibre equivalents"
-		echo "xlibre-specific packages enabled"
-
-		# Ensure xlibre-xserver-common is in the list (if not already added by uncommenting)
-		grep -q '^xlibre-xserver-common$' "$PACKAGES_FILE" || echo "xlibre-xserver-common" >> "$PACKAGES_FILE"
-
-		echo "xf86 packages converted to xlibre equivalents"
-		echo "xlibre-specific packages enabled"
-	fi
-
-echo
-echo "################################################################## "
-tput setaf 2
-echo "Phase 6 : "
-echo "- Adding time to /etc/dev-rel"
-echo "- Clean cache"
-tput sgr0
-echo "################################################################## "
-echo
-
-	echo "Adding time to /etc/dev-rel"
-	date_build=$(date -d now)
-	echo "Iso build on : "$date_build
-	sudo sed -i "s/\(^ISO_BUILD=\).*/\1$date_build/" $buildFolder/archiso/airootfs/etc/dev-rel
-
-	# cleaning cache yes or no
-	echo
-	clean_cache no
-
-echo
-echo "################################################################## "
-tput setaf 2
-echo "Phase 7 :"
-echo "- Building the iso - this can take a while - be patient"
-tput sgr0
-echo "################################################################## "
-echo
-
-	[ -d $outFolder ] || mkdir $outFolder
-	cd $buildFolder/archiso/
-	sudo mkarchiso -v -w $buildFolder -o $outFolder $buildFolder/archiso/
-
-echo
-echo "###################################################################"
-tput setaf 2
-echo "Phase 8 :"
-echo "- Creating checksums"
-echo "- Copying pgklist"
-tput sgr0
-echo "###################################################################"
-echo
-
-	cd $outFolder
-
-	echo "Creating checksums for : "$isoLabel
-	echo "##################################################################"
-	echo
-	echo "Building sha1sum"
-	echo "########################"
-	sha1sum $isoLabel | tee $isoLabel.sha1
-	echo "Building sha256sum"
-	echo "########################"
-	sha256sum $isoLabel | tee $isoLabel.sha256
-	echo "Building md5sum"
-	echo "########################"
-	md5sum $isoLabel | tee $isoLabel.md5
-	echo
-	echo "Moving pkglist.x86_64.txt"
-	echo "########################"
-	cp $buildFolder/iso/arch/pkglist.x86_64.txt  $outFolder/$isoLabel".pkglist.txt"
-
-echo
-echo "##################################################################"
-tput setaf 2
-echo "Phase 9 :"
-echo "- Removing the buildfolder or not"
-tput sgr0
-echo "################################################################## "
-echo
-
-	echo "Deleting the build folder if one exists - takes some time"
-	remove_buildfolder no
-
-if [ "$HAS_ACLS" = true ]; then
-	echo
-	echo "################################################################## "
-	tput setaf 2
-	echo "Phase 11 :"
-	echo "- Restoring home directory ACLs"
-	tput sgr0
-	echo "################################################################## "
-	echo
-
-	restore_acls
+    log_info "No default ACLs found on $HOME — skipping ACL modification."
 fi
 
-echo
-echo "##################################################################"
-tput setaf 2
-echo "DONE"
-echo "- Check your out folder :"$outFolder
-tput sgr0
-echo "################################################################## "
+##################################################################################
+# Phase 2: Host Dependencies Verification
+##################################################################################
+
+log_phase "2" "Verifying Host Dependencies"
+
+required_pkgs=("archiso" "grub")
+for pkg in "${required_pkgs[@]}"; do
+    if pacman -Qi "$pkg" &>/dev/null; then
+        log_info "Dependency '$pkg' is already installed."
+    else
+        log_info "Installing missing dependency '$pkg'..."
+        sudo pacman -S --needed --noconfirm "$pkg"
+    fi
+done
+
+##################################################################################
+# Phase 3: Build Folder Preparation
+##################################################################################
+
+log_phase "3" "Preparing Build Workspace"
+
+if [[ ! -d "$ARCHISO_SRC" ]]; then
+    log_error "Archiso source profile directory not found at: $ARCHISO_SRC"
+    exit 1
+fi
+
+remove_buildfolder yes
+
+log_info "Copying Archiso profile from $ARCHISO_SRC to $buildFolder/archiso..."
+mkdir -p "$buildFolder"
+cp -a "$ARCHISO_SRC" "$buildFolder/archiso"
+
+##################################################################################
+# Phase 4: GPG Keys & Extra Repositories
+##################################################################################
+
+log_phase "4" "Configuring Pacman Keyring & Extra Repositories"
+
+log_info "Initializing host pacman keyring..."
+sudo pacman-key --init
+
+if [[ "$xlibre" == "true" ]]; then
+    if ! sudo pacman-key -f 73580DE2EDDFA6D6 &>/dev/null; then
+        log_info "Importing xlibre GPG key..."
+        curl -sS https://x11libre.net/repo/arch_based/x86_64/0x73580DE2EDDFA6D6.gpg | sudo pacman-key --add -
+        sudo pacman-key --recv-keys 73580DE2EDDFA6D6 || true
+        sudo pacman-key --lsign-key 73580DE2EDDFA6D6 || true
+    fi
+
+    pacman_conf_target="$buildFolder/archiso/airootfs/etc/pacman.conf"
+    if [[ -f "$pacman_conf_target" ]] && ! grep -q '\[xlibre\]' "$pacman_conf_target"; then
+        log_info "Adding [xlibre] repository to build pacman.conf..."
+        printf '\n[xlibre]\nServer = https://x11libre.net/repo/arch_based/x86_64/\n' | sudo tee -a "$pacman_conf_target" >/dev/null
+    fi
+fi
+
+##################################################################################
+# Phase 5: Fetch Remote Assets & Customize Packages
+##################################################################################
+
+log_phase "5" "Updating Assets & Customizing Package Lists"
+
+# Fetch latest .bashrc
+safe_download "https://gitlab.com/xr-os/xray-bashrc/-/raw/main/etc/skel/.bashrc" \
+    "$buildFolder/archiso/airootfs/etc/skel/.bashrc" \
+    "skel .bashrc"
+
+# Fetch latest mirrorlist
+safe_download "https://gitlab.com/xr-os/xray-mirrorlists/-/raw/main/etc/pacman.d/mirrorlist" \
+    "$buildFolder/archiso/airootfs/etc/pacman.d/mirrorlist" \
+    "pacman mirrorlist"
+
+# Fetch latest generic repos
+safe_download "https://gitlab.com/xr-os/xray-generic-mirrorlists/-/raw/main/etc/pacman.d/xray-generic-repos" \
+    "$buildFolder/archiso/airootfs/etc/pacman.d/xray-generic-repos" \
+    "xray generic repos"
+
+# Fetch latest plymouth config
+safe_download "https://gitlab.com/xr-os/xray-plymouth-config/-/raw/main/etc/plymouth/plymouthd.conf" \
+    "$buildFolder/archiso/airootfs/etc/plymouth/plymouthd.conf" \
+    "plymouth configuration"
+
+# Reset packages.x86_64 from source
+log_info "Refreshing package manifest from $ARCHISO_SRC/packages.x86_64..."
+cp -f "$ARCHISO_SRC/packages.x86_64" "$buildFolder/archiso/packages.x86_64"
+PACKAGES_FILE="$buildFolder/archiso/packages.x86_64"
+
+# Calamares installer configuration
+if [[ "$installation_config_calamares" == "true" ]]; then
+    log_info "Configuring Calamares installer packages..."
+    sed -i 's|^xray-installation-config-|xray-installation-config-calamares-|g' "$PACKAGES_FILE"
+
+    if [[ -f "$buildFolder/archiso/airootfs/usr/share/applications/xray-installer.desktop" ]]; then
+        mkdir -p "$buildFolder/archiso/airootfs/etc/skel/Desktop"
+        cp -f "$buildFolder/archiso/airootfs/usr/share/applications/xray-installer.desktop" "$buildFolder/archiso/airootfs/etc/skel/Desktop/"
+    fi
+fi
+
+# Desktop Environment Package Customizations
+log_info "Applying package customizations for desktop: $desktop"
+
+case "$desktop" in
+    "xfce")
+        # Strip Plasma
+        sed -i '/^plasma/d; /^dolphin/d; /^dolphin-plugins/d; /^kio-admin/d; /^kdegraphics-thumbnailers/d' "$PACKAGES_FILE"
+        sed -i '/^ark/d; /^kcalc/d; /^gwenview/d; /^spectacle/d; /^kdeconnect/d; /^kwalletmanager/d; /^konsole/d' "$PACKAGES_FILE"
+        sed -i '/^tolitica-plasma-theme/d; /^xray-kde-dark/d; /^xray-kde-settings/d; /^arch-kde-theme/d; /^dtos-kde-theme/d; /^viper-kde-theme/d' "$PACKAGES_FILE"
+        sed -i '/^kwin-x11/d; /^kwayland-integration/d' "$PACKAGES_FILE"
+
+        # Strip GNOME
+        sed -i '/^gnome/d; /^gnome-extra/d; /^xray-gnome-settings/d' "$PACKAGES_FILE"
+
+        # Strip SonicDE
+        sed -i '/^sonic/d; /^xray-sonicde-settings/d' "$PACKAGES_FILE"
+
+        # Set wallpapers
+        sed -i 's/^xray-wallpapers$/xray-xfce-wallpapers/' "$PACKAGES_FILE"
+        ;;
+
+    "plasma")
+        # Strip XFCE
+        sed -i '/^xfce4/d; /^xray-xfce-settings/d; /^gvfs/d; /^flameshot/d; /^vlc/d; /^xcape/d; /^arandr/d; /^catfish/d' "$PACKAGES_FILE"
+        sed -i '/^evince/d; /^file-roller/d; /^gnome-disk-utility/d; /^gnome-keyring/d; /^gnome-screenshot/d; /^nomacs/d; /^playerctl/d; /^polkit-gnome/d; /^qt5ct/d; /^gittyup/d; /^hardcode-fixer-git/d; /^mugshot/d; /^autorandr/d; /^volumeicon/d; /^surfn-icons-git/d; /^numix-icon-theme-git/d; /^numix-circle-icon-theme-git/d; /^sardi-icons/d' "$PACKAGES_FILE"
+
+        # Strip GNOME
+        sed -i '/^gnome/d; /^gnome-extra/d; /^xray-gnome-settings/d' "$PACKAGES_FILE"
+
+        # Strip SonicDE
+        sed -i '/^sonic/d; /^xray-sonicde-settings/d' "$PACKAGES_FILE"
+
+        # Set wallpapers
+        sed -i 's/^xray-xfce-wallpapers$/xray-wallpapers/' "$PACKAGES_FILE"
+        ;;
+
+    "sonicde")
+        # Strip XFCE
+        sed -i '/^xfce4/d; /^xray-xfce-settings/d; /^gvfs/d; /^flameshot/d; /^vlc/d; /^xcape/d; /^arandr/d; /^catfish/d' "$PACKAGES_FILE"
+        sed -i '/^evince/d; /^file-roller/d; /^gnome-disk-utility/d; /^gnome-keyring/d; /^gnome-screenshot/d; /^nomacs/d; /^playerctl/d; /^polkit-gnome/d; /^qt5ct/d; /^gittyup/d; /^hardcode-fixer-git/d; /^mugshot/d; /^autorandr/d; /^volumeicon/d; /^surfn-icons-git/d; /^numix-icon-theme-git/d; /^numix-circle-icon-theme-git/d; /^sardi-icons/d' "$PACKAGES_FILE"
+
+        # Strip GNOME
+        sed -i '/^gnome/d; /^gnome-extra/d; /^xray-gnome-settings/d' "$PACKAGES_FILE"
+
+        # Strip Plasma
+        sed -i '/^plasma/d; /^kwin-x11/d; /^xray-kde-settings/d; /^xray-kde-dark/d' "$PACKAGES_FILE"
+
+        # Set wallpapers
+        sed -i 's/^xray-xfce-wallpapers$/xray-wallpapers/' "$PACKAGES_FILE"
+        ;;
+
+    "gnome")
+        # Strip XFCE
+        sed -i '/^gvfs/d; /^flameshot/d; /^xcape/d; /^arandr/d; /^catfish/d; /^evince/d; /^file-roller/d; /^nomacs/d; /^playerctl/d; /^qt5ct/d; /^gittyup/d; /^hardcode-fixer-git/d; /^mugshot/d; /^autorandr/d; /^volumeicon/d; /^xray-xfce-settings/d' "$PACKAGES_FILE"
+
+        # Strip Plasma
+        sed -i '/^plasma/d; /^dolphin/d; /^dolphin-plugins/d; /^kio-admin/d; /^kdegraphics-thumbnailers/d; /^ark/d; /^kcalc/d; /^gwenview/d; /^spectacle/d; /^kdeconnect/d; /^kwalletmanager/d; /^konsole/d' "$PACKAGES_FILE"
+        sed -i '/^tolitica-plasma-theme/d; /^xray-kde-dark/d; /^xray-kde-settings/d; /^arch-kde-theme/d; /^dtos-kde-theme/d; /^viper-kde-theme/d; /^kwin-x11/d; /^kwayland-integration/d' "$PACKAGES_FILE"
+
+        # Strip SonicDE
+        sed -i '/^sonic/d; /^xray-sonicde-settings/d' "$PACKAGES_FILE"
+
+        # Set wallpapers
+        sed -i 's/^xray-wallpapers$/xray-gnome-wallpapers/' "$PACKAGES_FILE"
+        ;;
+esac
+
+# Display Manager Configuration
+log_info "Configuring login manager: $login_manager"
+dm_service=""
+
+case "$login_manager" in
+    "sddm")
+        sed -i '/^plasma-login-manager/d; /^gdm/d; /^lightdm/d; /^sonic-login-manager/d; /^sonic-silver-sddm/d' "$PACKAGES_FILE"
+        dm_service="sddm.service"
+        ;;
+    "plasma-login-manager")
+        sed -i '/^sddm/d; /^gdm/d; /^lightdm/d; /^sonic-login-manager/d; /^xray-sddm-simplicity-git/d; /^sonic-silver-sddm/d' "$PACKAGES_FILE"
+        dm_service="plasmalogin.service"
+        ;;
+    "gdm")
+        sed -i '/^sddm/d; /^plasma-login-manager/d; /^lightdm/d; /^sonic-login-manager/d; /^xray-sddm-simplicity-git/d; /^sonic-silver-sddm/d' "$PACKAGES_FILE"
+        dm_service="gdm.service"
+        ;;
+    "lightdm")
+        sed -i '/^sddm/d; /^plasma-login-manager/d; /^gdm/d; /^sonic-login-manager/d; /^xray-sddm-simplicity-git/d; /^sonic-silver-sddm/d' "$PACKAGES_FILE"
+        dm_service="lightdm.service"
+        ;;
+    "sonic-login-manager")
+        sed -i '/^sddm/d; /^plasma-login-manager/d; /^gdm/d; /^lightdm/d; /^xray-sddm-simplicity-git/d; /^sonic-silver-sddm/d' "$PACKAGES_FILE"
+        dm_service="soniclogin.service"
+        ;;
+esac
+
+if [[ -n "$dm_service" ]]; then
+    mkdir -p "$buildFolder/archiso/airootfs/etc/systemd/system"
+    sudo ln -sf "/usr/lib/systemd/system/${dm_service}" "$buildFolder/archiso/airootfs/etc/systemd/system/display-manager.service"
+fi
+
+# Display Manager Autologin Configuration per Desktop Environment
+log_info "Configuring display manager autologin configuration for desktop: $desktop"
+ignore_source_dir="${ARCHISO_SRC}/.ignore"
+
+# Remove any stray .ignore directory copied into the temporary build folder
+rm -rf "$buildFolder/archiso/.ignore"
+
+if [[ "$desktop" == "xfce" ]]; then
+    if [[ -d "${ignore_source_dir}/sddm-xfce/sddm.conf.d" ]]; then
+        log_info "Applying sddm.conf.d from ${ignore_source_dir} -> $buildFolder/archiso/airootfs/etc/sddm.conf.d"
+        mkdir -p "$buildFolder/archiso/airootfs/etc"
+        rm -rf "$buildFolder/archiso/airootfs/etc/plasmalogin.conf.d"
+        cp -a "${ignore_source_dir}/sddm-xfce/sddm.conf.d" "$buildFolder/archiso/airootfs/etc/"
+    else
+        log_warn "Source directory ${ignore_source_dir}/sddm-xfce/sddm.conf.d not found."
+    fi
+elif [[ "$desktop" == "plasma" ]]; then
+    if [[ -d "${ignore_source_dir}/plasmalogin.conf.d" ]]; then
+        log_info "Applying plasmalogin.conf.d from ${ignore_source_dir} -> $buildFolder/archiso/airootfs/etc/plasmalogin.conf.d"
+        mkdir -p "$buildFolder/archiso/airootfs/etc"
+        rm -rf "$buildFolder/archiso/airootfs/etc/sddm.conf.d"
+        cp -a "${ignore_source_dir}/plasmalogin.conf.d" "$buildFolder/archiso/airootfs/etc/"
+    else
+        log_warn "Source directory ${ignore_source_dir}/plasmalogin.conf.d not found."
+    fi
+fi
+
+# Display Protocols (xlibre)
+if [[ "$xlibre" == "true" ]]; then
+    log_info "Replacing Xorg packages with xlibre packages where available..."
+    NO_XLIBRE_EQUIV=(
+        "xorg-xinit" "xorg-xkill" "xorg-xrandr" "xorg-xrdb" "xorg-xwayland"
+        "xorg-xprop" "xorg-xset" "xorg-xmodmap" "xorg-xev" "xorg-xinfo"
+        "xorg-xdpyinfo" "xorg-xgamma" "xorg-xsetroot" "xorg-iceauth"
+        "xorg-mkfontdir" "xorg-mkfontscale" "xorg-sessreg" "xorg-smproxy"
+        "xorg-x11perf" "xorg-xauth" "xorg-xbacklight" "xorg-xcmsdb"
+        "xorg-xcursorgen" "xorg-xdg-user-dirs" "xorg-xdriinfo" "xorg-xfs"
+        "xorg-xhost" "xorg-xinput" "xorg-xkbcomp" "xorg-xkbevd" "xorg-xkbutils"
+        "xorg-xlsatoms" "xorg-xlsclients" "xorg-xmessage" "xorg-xpr"
+        "xorg-xprehashprinterlist" "xorg-xrefresh" "xorg-xvinfo" "xorg-xwd"
+        "xorg-xwininfo" "xorg-xwud"
+    )
+
+    TEMP_PACKAGES="$(mktemp)"
+    while IFS= read -r pkg || [[ -n "$pkg" ]]; do
+        [[ -z "$pkg" || "$pkg" =~ ^[[:space:]]*# ]] && { echo "$pkg" >> "$TEMP_PACKAGES"; continue; }
+        skip=false
+        for excluded in "${NO_XLIBRE_EQUIV[@]}"; do
+            if [[ "$pkg" == "$excluded" ]]; then
+                skip=true
+                break
+            fi
+        done
+        [[ "$skip" == false ]] && echo "$pkg" >> "$TEMP_PACKAGES"
+    done < "$PACKAGES_FILE"
+    mv "$TEMP_PACKAGES" "$PACKAGES_FILE"
+
+    sed -i 's/^xorg-server$/xlibre-xserver/' "$PACKAGES_FILE"
+    sed -i 's/xf86-input-/xlibre-input-/g' "$PACKAGES_FILE"
+    sed -i 's/xf86-video-/xlibre-video-/g' "$PACKAGES_FILE"
+    sed -i 's/^#xlibre-/xlibre-/g' "$PACKAGES_FILE"
+    grep -q '^xlibre-xserver-common$' "$PACKAGES_FILE" || echo "xlibre-xserver-common" >> "$PACKAGES_FILE"
+fi
+
+# Audio Protocol Configuration
+log_info "Configuring audio packages for: $audio"
+if [[ "$audio" == "pulseaudio" ]]; then
+    sed -i 's/^pipewire-/pulseaudio-/g' "$PACKAGES_FILE"
+    sed -i 's/^pipewire-alsa-/pulseaudio-alsa/g' "$PACKAGES_FILE"
+    sed -i 's/^#[[:space:]]*pulseaudio-bluetooth/pulseaudio-bluetooth/' "$PACKAGES_FILE"
+    sed -i '/^pipewire-pulse/d; /^gst-plugin-pipewire/d' "$PACKAGES_FILE"
+elif [[ "$audio" == "pipewire" ]]; then
+    sed -i '/^pulseaudio/d; /^pulseaudio-alsa/d; /^pulseaudio-bluetooth/d' "$PACKAGES_FILE"
+fi
+
+##################################################################################
+# Phase 6: Release Metadata & Profiledef Synchronization
+##################################################################################
+
+log_phase "6" "Synchronizing Release Metadata & Profiledef"
+
+date_build="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+log_info "Recording ISO build timestamp: $date_build"
+
+# Update /etc/dev-rel
+echo "ISO_BUILD=${date_build}" | sudo tee "$buildFolder/archiso/airootfs/etc/dev-rel" >/dev/null
+
+# Update os-release & xray-release BUILD_ID
+if [[ -f "$buildFolder/archiso/airootfs/etc/os-release" ]]; then
+    sudo sed -i "s|^BUILD_ID=.*|BUILD_ID=\"${xrayVersion}\"|" "$buildFolder/archiso/airootfs/etc/os-release"
+fi
+
+if [[ -f "$buildFolder/archiso/airootfs/etc/xray-release" ]]; then
+    sudo sed -i "s|^DISTRIB_RELEASE=.*|DISTRIB_RELEASE=\"${xrayVersion}\"|" "$buildFolder/archiso/airootfs/etc/xray-release"
+fi
+
+# Synchronize profiledef.sh
+profiledef_path="$buildFolder/archiso/profiledef.sh"
+if [[ -f "$profiledef_path" ]]; then
+    log_info "Updating $profiledef_path with iso_name='${iso_name}' and iso_version='${xrayVersion}'..."
+    sed -i "s|^iso_name=.*|iso_name=\"${iso_name}\"|" "$profiledef_path"
+    sed -i "s|^iso_version=.*|iso_version=\"${xrayVersion}\"|" "$profiledef_path"
+fi
+
+# Run optional pacman cache clean
+clean_cache "$clean_cache_opt"
+
+##################################################################################
+# Phase 7: Building the ISO with mkarchiso
+##################################################################################
+
+log_phase "7" "Building ISO with mkarchiso"
+
+mkdir -p "$outFolder"
+work_dir="$buildFolder/work"
+mkdir -p "$work_dir"
+
+log_info "Executing: sudo mkarchiso -v -w '$work_dir' -o '$outFolder' '$buildFolder/archiso/'"
+sudo mkarchiso -v -w "$work_dir" -o "$outFolder" "$buildFolder/archiso/"
+
+##################################################################################
+# Phase 8: Checksums & Package List Extraction
+##################################################################################
+
+log_phase "8" "Generating Checksums & Preserving Manifests"
+
+cd "$outFolder"
+
+# Locate the generated ISO file
+generated_iso=""
+if [[ -f "$outFolder/$isoLabel" ]]; then
+    generated_iso="$isoLabel"
+else
+    # Fallback to finding the newest ISO in outFolder
+    newest_iso="$(find "$outFolder" -maxdepth 1 -name "*.iso" -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -n 1 | awk '{print $2}')"
+    if [[ -n "$newest_iso" && -f "$newest_iso" ]]; then
+        generated_iso="$(basename "$newest_iso")"
+        log_warn "Generated ISO filename is '$generated_iso' (expected '$isoLabel')."
+    fi
+fi
+
+if [[ -n "$generated_iso" && -f "$outFolder/$generated_iso" ]]; then
+    log_info "Generating checksums for: $generated_iso"
+    
+    log_info "Computing sha1sum..."
+    sha1sum "$generated_iso" | tee "${generated_iso}.sha1"
+    
+    log_info "Computing sha256sum..."
+    sha256sum "$generated_iso" | tee "${generated_iso}.sha256"
+    
+    log_info "Computing md5sum..."
+    md5sum "$generated_iso" | tee "${generated_iso}.md5"
+    
+    log_success "Checksum files created."
+else
+    log_error "Could not find generated ISO in $outFolder!"
+fi
+
+# Copy package list manifest
+pkglist_found=false
+for candidate in \
+    "$work_dir/iso/arch/pkglist.x86_64.txt" \
+    "$buildFolder/iso/arch/pkglist.x86_64.txt" \
+    "$work_dir/x86_64/airootfs/root/pkglist.x86_64.txt"
+do
+    if [[ -f "$candidate" ]]; then
+        log_info "Copying pkglist manifest from $candidate..."
+        cp -f "$candidate" "$outFolder/${generated_iso:-$isoLabel}.pkglist.txt"
+        pkglist_found=true
+        break
+    fi
+done
+
+if [[ "$pkglist_found" == "false" ]]; then
+    # Search recursively in work directory
+    candidate="$(find "$buildFolder" -name "pkglist.x86_64.txt" -type f 2>/dev/null | head -n 1)"
+    if [[ -n "$candidate" && -f "$candidate" ]]; then
+        log_info "Found pkglist manifest at $candidate..."
+        cp -f "$candidate" "$outFolder/${generated_iso:-$isoLabel}.pkglist.txt"
+    else
+        log_warn "pkglist.x86_64.txt not found in build workspace."
+    fi
+fi
+
+##################################################################################
+# Phase 9: Workspace Cleanup & ACL Restoration
+##################################################################################
+
+log_phase "9" "Post-Build Cleanup"
+
+remove_buildfolder "$remove_build_opt"
+
+if [[ "$HAS_ACLS" == "true" ]]; then
+    restore_acls
+fi
+
+log_section "ISO Build Complete!"
+log_success "Target Output Directory: $outFolder"
+if [[ -n "${generated_iso:-}" && -f "$outFolder/$generated_iso" ]]; then
+    log_success "ISO Artifact           : $outFolder/$generated_iso"
+fi
 echo

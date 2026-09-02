@@ -1,12 +1,10 @@
-alsa-utils
 amd-ucode
 arch-install-scripts
 b43-fwcutter
 base
 bcachefs-tools
-bind
 brltty
-broadcom-wl
+broadcom-wl-dkms
 btrfs-progs
 clonezilla
 cloud-init
@@ -17,12 +15,10 @@ dhcpcd
 diffutils
 dmidecode
 dmraid
-dnsmasq
 dosfstools
 e2fsprogs
 edk2-shell
 efibootmgr
-ethtool
 exfatprogs
 f2fs-tools
 fatresize
@@ -37,7 +33,6 @@ hyperv
 intel-ucode
 irssi
 iw
-iwd
 jfsutils
 kitty-terminfo
 ldns
@@ -45,7 +40,6 @@ less
 lftp
 libfido2
 libusb-compat
-linux
 linux-atm
 linux-firmware
 linux-firmware-marvell
@@ -61,7 +55,6 @@ memtest86+-efi
 mkinitcpio
 mkinitcpio-archiso
 mkinitcpio-nfs-utils
-modemmanager
 mtools
 nano
 nbd
@@ -73,9 +66,7 @@ ntfs-3g
 nvme-cli
 open-iscsi
 open-vm-tools
-openconnect
 openssh
-openvpn
 partclone
 parted
 partimage
@@ -96,26 +87,24 @@ sof-firmware
 squashfs-tools
 sudo
 syslinux
-systemd-resolvconf
+systemd-liberated-git
+systemd-liberated-libs-git
+systemd-liberated-resolvconf-git
+systemd-liberated-sysvcompat-git
+systemd-liberated-tests-git
+systemd-liberated-ukify-git
 tcpdump
 terminus-font
 testdisk
 tmux
 tpm2-tss
 udftools
-usb_modeswitch
 usbmuxd
 usbutils
 vim
 virtualbox-guest-utils-nox
-vpnc
-wireless-regdb
 wireless_tools
-wpa_supplicant
 wvdial
-xdg-utils
-xfsprogs
-xl2tpd
 zsh
 
 #####################################
@@ -125,35 +114,34 @@ xray-installation-config
 xray-settings
 
 #=======================#
-# Xray-Shell
+# xray-shell
 #=======================#
-xray-fish-config
+xray-terminal-config
 xray-fish-settings
 xray-alacritty-config
 xray-ghostty-config
 
 #=======================#
-# Xray-Utilities
+# xray-utilities
 #=======================#
-tolitica
-tolito
+#tolitica
+#tolito
 
 #=======================#
-# - Xay-wallpapers
+# xray-wallpapers
 #=======================#
 xray-wallpapers
 
 #=======================#
-# - Xray-Installation
+# - xray-installation
 #=======================#
-#xray-installer
-calamares
-xray-calamares-config
+#arch7z-installer
+xray-calamares-git
 
 #=======================#
-# - Xray-Fonts
+# - xray-fonts
 #=======================#
-xray-nerd-fonts
+#xray-nerd-fonts
 
 ##############################################
 #       PACKAGES THAT STAY AFTER INSTALLATION
@@ -163,9 +151,9 @@ make
 libadwaita
 ntp
 
-#####################################
-#       DESKTOP ENVIRONMENT: PLASMA
-####################################
+#########################################
+#       DESKTOP ENVIRONMENT: PLASMA START
+#########################################
 plasma
 xray-kde-settings
 
@@ -183,21 +171,64 @@ kdegraphics-thumbnailers
 #=======================#
 ark
 kcalc
+kdeconnect
+kdenetwork-filesharing
 gwenview
 spectacle
 kate
 kamoso
 partitionmanager
+gparted
+plasma-x11-session
 okular
-kdeconnect
 kolourpaint
+drawy
 filelight
 kwalletmanager
+libappindicator
+kwin-x11
+kwayland-integration
+
+#########################################
+#       DESKTOP ENVIRONMENT: PLASMA END
+#########################################
+
+#########################################
+#       DESKTOP ENVIRONMENT: SONICDE START
+#########################################
+sonicde
+sonic-activities
+sonic-audio-applet-pulse
+sonic-decoration
+sonic-desktop-interface
+sonic-interface-libraries
+sonic-keybind-daemon
+sonic-login-manager
+sonic-network-manager
+sonic-night-light
+sonic-screen
+sonic-screen-library
+sonic-screenlocker
+sonic-silver-sddm
+sonic-silver-theme
+sonic-sysguard-library
+sonic-system-info sonic-win
+sonic-workspace
+sonic-workspace-addons
+sonic-workspace-wallpapers
+sonic-x11-session
+sonic-silver-sddm
+xray-sonicde-settings
+
+#########################################
+#       DESKTOP ENVIRONMENT: SONICDE END
+#########################################
 
 #########################################
 #       DESKTOP ENVIRONMENT: XFCE START
 #########################################
 xray-xfce-settings
+#xray-xfce-settings-laptop
 xfce4
 xfce4-goodies
 
@@ -212,9 +243,7 @@ gvfs-nfs
 gvfs-smb
 gvfs-dnssd
 flameshot
-archlinux-tweak-tool-git
-variety
-vlc
+#archlinux-tweak-tool-git
 xcape
 arandr
 catfish
@@ -232,9 +261,20 @@ hardcode-fixer-git
 mugshot
 autorandr
 volumeicon
+arc-gtk-theme
 
 #########################################
 #       DESKTOP ENVIRONMENT: XFCE END
+#########################################
+
+#########################################
+#       DESKTOP ENVIRONMENT: GNOME START
+#########################################
+gnome
+gnome-extra
+xray-gnome-settings
+#########################################
+#       DESKTOP ENVIRONMENT: GNOME END
 #########################################
 
 #=======================#
@@ -247,7 +287,8 @@ alacritty
 # - Login Manager
 #=======================#
 sddm
-xray-sddm-simplicity-git
+xray-sddm-simplicity
+plasma-login-manager
 
 #####################################
 #       SYSTEM PACKAGES
@@ -256,6 +297,18 @@ xray-sddm-simplicity-git
 #=======================#
 # - Audio
 #=======================#
+## pipewire
+pipewire
+pipewire-pulse
+pipewire-alsa
+gst-plugin-pipewire
+
+## pulseaudio
+#pulseaudio
+#pulseaudio-alsa
+#pulseaudio-bluetooth
+pavucontrol
+
 alsa-firmware
 alsa-plugins
 alsa-lib
@@ -265,26 +318,19 @@ gst-plugins-bad
 gst-plugins-base
 gst-plugins-good
 gst-plugins-ugly
-gst-plugin-pipewire
 gstreamer
 gst-plugin-va
-#pulseaudio
-#pulseaudio-alsa
-pavucontrol
 libdvdcss
-pipewire
-pipewire-alsa
-pipewire-pulse
 libde265
 
 #=======================#
 # - BTRFS
 #=======================#
-snapper
-snapper-support
-snapper-tools
-btrfs-assistant
-btrfsmaintenance
+#snapper
+#snapper-support
+#snapper-tools
+#btrfs-assistant
+#btrfsmaintenance
 
 #=======================#
 # - AUR-Helpers
@@ -294,7 +340,7 @@ yay
 #=======================#
 # - PKG-Managers
 #=======================#
-pamac-all
+pamac-aur
 
 #=======================#
 # - Bluetooth
@@ -308,8 +354,9 @@ bluez-utils
 #=======================#
 # - Browsers
 #=======================#
-vivaldi
-vivaldi-ffmpeg-codecs
+#vivaldi
+#vivaldi-ffmpeg-codecs
+brave-origin-bin
 
 #=======================#
 # - Development
@@ -325,18 +372,24 @@ wget
 curl
 yad
 sublime-text-4
-xray-development-meta
+#dbeaver
+#zed
+#vscodium
+#vita-development-meta
+archlinux-tools
 
 #=======================#
 # - Office
 #=======================#
-libreoffice-fresh
+#libreoffice-fresh
 
 #=======================#
 # - Kernel and Headers
 #=======================#
 linux
 linux-headers
+linux-vita
+linux-vita-headers
 
 #=======================#
 # - Shell
@@ -353,6 +406,7 @@ zsh-syntax-highlighting
 #=======================#
 # - Fonts
 #=======================#
+vita-hack-fonts
 noto-fonts-emoji
 ttf-meslo-nerd
 ttf-firacode-nerd
@@ -374,20 +428,40 @@ ttf-ubuntu-font-family
 #=======================#
 # - Firewall
 #=======================#
-ufw
+#ufw
+firewalld
+firewall-applet
 
 #=======================#
 # - Network
 #=======================#
-nss-mdns
 avahi
 mobile-broadband-provider-info
+bind
+dnsmasq
+ethtool
+iwd
+modemmanager
+net-tools
+netctl
 networkmanager
 network-manager-applet
+networkmanager-openconnect
+networkmanager-openvpn
+nss-mdns
+openconnect
+openvpn
+#usb_modeswitch
+vpnc
+whois
+wireless-regdb
+wpa_supplicant
+xl2tpd
 
 #=======================#
 # - GPU GENRL DRIVERS
 #=======================#
+xray-gpu-scripts
 #libglvnd
 #lib32-libglvnd
 #dkms
@@ -415,18 +489,17 @@ xorg-xrandr
 xorg-xrdb
 xf86-input-elographics
 xf86-input-evdev
-xf86-input-libinput
-xf86-input-synaptics
+#xf86-input-libinput
+#xf86-input-synaptics
 xf86-input-vmmouse
 xf86-input-wacom
 xf86-video-amdgpu
 xf86-video-fbdev
-xf86-video-vmware
+#xf86-video-vmware
 
 #xlibre-video-qxl
 #xlibre-video-nouveau
 #xlibre-input-void
-#xlibre-xserver-src
 #xlibre-xserver-xephyr
 #xlibre-xserver-xnest
 #xlibre-xserver-xvfb
@@ -468,16 +541,19 @@ mkinitcpio-openswap
 # - Multimedia
 #=======================#
 haruna
-strawberry
+#strawberry
+audacious
+vlc
+vlc-plugins-all
 
 #=======================#
 # - OBS-Studio-pkgs
 #=======================#
-obs-gstreamer
+#obs-gstreamer
 #gstreamer-vaapi
 
 #=======================#
-# - Unreal Engine
+# - Unreal Engine Dev
 #=======================#
 dotnet-sdk
 clang
@@ -492,17 +568,17 @@ xray-keyring
 #=======================#
 # - Utilities
 #=======================#
-power-profiles-daemon
-switcheroo-control
-gparted
+#power-profiles-daemon
+#switcheroo-control
+#gparted
 unace
 unrar
 unzip
 mintstick
 font-manager
-archlinux-tools
 simple-scan
 plymouth
+variety
 
 #=======================#
 # - Other
@@ -511,34 +587,22 @@ lsb-release
 grub-btrfs
 downgrade
 packagekit-qt6
-xl2tpd
 xfsprogs
 xdg-user-dirs-gtk
 xdg-utils
+nohang
 ananicy-cpp
-cachyos-ananicy-rules-git
+xray-ananicy-rules
 
 #####################################
 #       GAMING
 ####################################
 
 #=======================#
-# - xray-gaming-meta
+# xray gaming packs
 #=======================#
-#xray-gaming-meta
-
-#=======================#
-# - Wine & Dependencies
-#=======================#
-#wine-staging
-#winetricks
-
-#=======================#
-# - Proton-Utilities
-#=======================#
-#protontricks
-#protonplus
-#portproton
+xray-gaming-meta
+xray-gaming-applications
 
 #=======================#
 # - Utilities
@@ -549,7 +613,6 @@ cachyos-ananicy-rules-git
 #gst-plugins-base-libs
 #lib32-alsa-plugins
 #lib32-giflib
-#lib32-gst-plugins-base-libs
 #lib32-gtk3
 #lib32-libjpeg-turbo
 #lib32-libva
@@ -566,53 +629,85 @@ cachyos-ananicy-rules-git
 #umu-launcher
 #ttf-liberation
 #vulkan-tools
+#gamemode
+#lib32-gamemode
+
+#gamescope
+#goverlay
+#lib32-mangohud
+#mangohud
+#wqy-zenhei
+#protonplus
+
 
 #=======================#
-# - Runners
+# - Compatibility Layers
 #=======================#
+#wine-staging
+#wine
 #proton-cachyos-slr
+
+#=====================================#
+# - Utilities for Compatibility Layers
+#=====================================#
+#winetricks
+#protontricks
 
 #=======================#
 # - Launchers
 #=======================#
-#heroic-games-launcher-bin
 #steam
 #lutris
-#bottles
+#heroic-games-launcher
+#faugus-launcher
+#portproton
 
 #####################################
 #       XRAY THEMING STUFF
 ####################################
 
 #=======================#
-# - OTHER-STUFF
-#=======================#
-xray-ui-elements
-
-#=======================#
 # - DE themes
 #=======================#
 #tolitica-plasma-theme
 xray-kde-dark
-#arch-kde-theme
+vita-kde-dark
+vita7z-kde-theme
+arch-kde-theme
 #dtos-kde-theme
 #viper-kde-theme
 
 #=======================#
 # - BOOT SPLASH SCREENS
 #=======================#
-xray-liquid-boot-splash
-viper-plymouth-animation
-#viper-liquid-boot-splash
+photograph-liquid-boot-animation
+xray-os-cinematic-plymouth
+xray-os-cinematic-ii-plymouth
 
 #=======================#
 # - Icons
 #=======================#
 dracula-icons-git
 surfn-icons-git
-numix-icon-theme-git
-numix-circle-icon-theme-git
-sardi-icons
+#numix-icon-theme-git
+#numix-circle-icon-theme-git
+#sardi-icons
+tela-circle-icon-theme-all
+tela-circle-icon-theme-black
+tela-circle-icon-theme-blue
+tela-circle-icon-theme-brown
+tela-circle-icon-theme-dracula
+tela-circle-icon-theme-green
+tela-circle-icon-theme-grey
+tela-circle-icon-theme-manjaro
+tela-circle-icon-theme-nord
+tela-circle-icon-theme-orange
+tela-circle-icon-theme-pink
+tela-circle-icon-theme-purple
+tela-circle-icon-theme-red
+tela-circle-icon-theme-standard
+tela-circle-icon-theme-ubuntu
+tela-circle-icon-theme-yellow
 
 #=======================#
 # - Cursor-Icons
@@ -620,10 +715,41 @@ sardi-icons
 bibata-cursor-theme
 capitaine-cursors
 vimix-cursors
+apple_cursor
 
 #=======================#
 # - XRAY-Grub-Themes
 #=======================#
-viper-grub-theme
 xray-grub-theme
+#viper-grub-theme
+#vita-grub-theme
 #arch7z-grub-theme
+
+#=======================#
+# - OTHER-STUFF
+#=======================#
+xray-ui-elements
+
+#=======================#
+# - CUSTOM APPS I USE
+#=======================#
+zed
+vscodium
+keepassxc
+vivaldi
+vivaldi-ffmpeg-codecs
+floorp
+waterfox
+opera-gx
+opera
+brave
+kate
+libreoffice-fresh
+antigravity
+obsidian
+bazaar-desinfected
+freetube
+qbittorrent
+gimp
+inkscape
+kdenlive

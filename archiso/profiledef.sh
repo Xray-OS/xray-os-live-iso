@@ -2,8 +2,8 @@
 # shellcheck disable=SC2034
 
 iso_name="Xray_OS"
-iso_label="XR_$(date +%Y%m)"
-iso_publisher="Xray_OS <https://xray-os.github.io/xray_os-website/>"
+iso_label="VT_$(date +%Y%m)"
+iso_publisher="Xray_OS <https://xray-os.github.io/xray_os-website/get-started.html>"
 iso_application="Xray_OS Live/Rescue CD"
 iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
 install_dir="arch"

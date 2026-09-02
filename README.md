@@ -1,110 +1,31 @@
-# Xray_OS
-
-| Xray The bear | Viper logo |
-|---------------|------------|
-| <img src="https://images2.imgbox.com/12/9e/wqMmWy0F_o.png" width="300"/> | <img src="https://images2.imgbox.com/57/90/Nd0Dcm79_o.png" width="300"/> |
-
+# Vita-OS
+<img src="https://images2.imgbox.com/07/c0/shcL3xwb_o.png" width="300"/>
 
 ## Overview
-Xray_OS is a personal Arch Linux-based distribution created for my personal use - it's not intended as a competitor to other distributions. This is a curated system with custom tools and fixes for several use cases.
+Vita-OS is an Arch Linux distribution designed specifically to be free from any external influences from 
+corporate conglomerates or any special interest groups that profess false freedom and impose barriers 
+disguised as "Community guidelines" or a "Code of conduct" upon their users, along with other intrusive 
+practices like forcing ideological advertisements or pop-ups during application use.
 
-**Website:** [Visit Xray_OS's page](https://xray-os.github.io/xray_os-website/)
+## Freedom before anything else
+We utilize SystemD-Liberated instead of SystemD—not for any external, non-technical reason (we always separate the art from the artist), but because it includes code for age verification, which goes against the core principles of user freedom.
 
-## Key Features
+## Always separate the Art from the Artist
+We support:
+- Wayland
+- Xlibre
+- X11 (what still remains of it)
+- SonicDE
+- GNOME
+- Plasma
 
-- **Custom AUR Helper** - Tolito-AUR-helper gets primarily curated in-house PKGBUILDs, AUR and custom configured repositories as fallback
-- **Curated Packages** - Fixed and improved PKGBUILDs for some broken AUR packages
-- **Custom Wallpapers** - Original Xray_OS wallpapers (not sourced from elsewhere)
-- **Smart GPU Detection** - Automatically detects and removes unused GPU drivers during installation
-- **DaVinci Resolve Support** - Easy installation via Tolito-AUR-helper
-- **Tolitica Welcome App** - Custom welcome application with useful system options
+## We do not censor
+As long as our users want something in our repositories, we will include it. We are not going to forbid the use of quality software or restrict "incorrect" opinions. TLDR: We do not censor.
 
-## Unique Features
-
-### Arch7z-Installer/Xray-Installer
-- Xray_OS custom installer (Currently been fixed, it'll be back)
-- Custom partitioning option
-- Swap is optional
-- Works on VBox (KVM in the future)
-- Made with the QT framework
-- Beautiful and elegant UI
-- Minimal
-- BTRFS and EXT4 only
-- UEFI/GPT only
-
-### Tolito-AUR-helper
-- Custom AUR helper that builds and downloads packages on the fly primarily from Xray_OS's curated repo, but also from AUR and optionals added repos, ChaoiticAUR added as an extra repo already
-- Fixes some broken AUR packages (like DaVinci Resolve installation errors) ---> (Notify if it's still working please..)
-- Automatically falls back to standard AUR or even optional added repos like ChaoticAUR repos (added by default) if a package is not available
-
-### Tolitica Welcome App
-- Custom welcome application with useful system options
-- Provides easy access to system configuration and tools
-- Option to change your shell
-- Several options to configured the system after a fresh install, including removing or leave packages for gaming, stores, flatpak, snapd and others
-- Option to enable/disable terminal theming (Fish only)
-- Integraded with Arch7z-Installer and Calamares Installer (Arch7z-Installer it's been fixed at the moment, please have patience)
-
-### Smart Installation Features
-- **GPU Driver Detection**: Automatically detects your GPU and removes unused drivers
-- **DaVinci Resolve Fix**: Resolves missing title bar issues in DaVinci Resolve on KDE Plasma
-- **Custom Wallpapers**: Includes original Xray_OS wallpapers
-
-### Important Notes
-- This is a **personal ISO** created for personal use
-- **Not a commercial competitor** to other distributions
-- GPU driver detection feature works good, but it will be improved eventually
-- Have patient for fixes because this distro is only mantained by literally just one person
-
-## System Requirements
-
-### Minimum Requirements
-- **CPU**: x86_64 processor (64-bit)
-- **RAM**: 4 GB minimum
-- **Storage**: 25 GB available disk space
-- **Graphics**: Any graphics card with basic driver support
-
-### Recommended Requirements
-- **CPU**: Multi-core x86_64 processor
-- **RAM**: 8 GB or more
-- **Storage**: 70 GB+ SSD storage
-- **Graphics**: Dedicated graphics card for optimal performance
-
-## Download
-**Current Status**: ISO under active development
-- **Project Page**: [SourceForge](https://sourceforge.net/projects/xray-os/)
-
-## What Makes This Different
-
-### DaVinci Resolve Made Easy
-Normally, downloading DaVinci Resolve from the AUR gives installation errors. With Xray_OS's Tolito-AUR-helper, you can:
-- Download and install DaVinci Resolve easily
-- Get it installed on the fly without errors
-- Access curated PKGBUILDs that fix some broken AUR packages
-- Fixed title bar issues in DaVinci Resolve
-
-### Personal Touch
-- Created as a personal ISO for specific needs
-- Not intended to compete with major distributions unless people take interest in the project
-- Focuses on innovation, creation, usability and solving real-world package installation issues
-- Includes original custom wallpapers
-- Custom tools to manage the system
-- Adjusted for almost every use case primarily as a workstation
-
-## Community & Support
-
-- **Project Page**: [SourceForge](https://sourceforge.net/projects/xray-os/)
-- **Issues**: Report bugs and feature requests on SourceForge
-- **Discussions**: Community forums and discussions
-
-## License
-
-Xray_OS is semi open-source but is not LIBRE. Individual components may have their own licenses.
+## Support
+- **Report an Issue**: https://github.com/vita-linux/vita-os/issues
+- **Project Page**:    [SourceForge](https://sourceforge.net/projects/vita-os/)
 
 ## Contributing
-
-We welcome contributions!, some people think this project it's useless because of is humble origins, if you ever let aside the discrimination and you think this is a great system please contribute to it
-
----
-
-*Xray_OS - It’s not a Linux fork. It’s the Linux you never expected*
+It's not time yet for me to asking about donations or help, if you like my personal Linux OS, then use it and 
+decide to help or not when it's stable enough.
