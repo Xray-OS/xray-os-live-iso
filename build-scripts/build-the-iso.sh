@@ -185,21 +185,15 @@ remove_buildfolder() {
     if [[ "$choice" == "yes" ]]; then
         if [[ -d "$buildFolder" ]]; then
             log_info "Unmounting any active chroot mounts in ($buildFolder)..."
-            if command -v findmnt >/dev/null 2>&1; then
-                findmnt -rnlo TARGET "$buildFolder" 2>/dev/null | sort -r | while IFS= read -r mnt; do
-                    if [[ -n "$mnt" && "$mnt" != "$buildFolder" ]]; then
-                        sudo umount -lf "$mnt" 2>/dev/null || true
-                    fi
-                done
-            fi
+            # Unmount any mounts listed in /proc/mounts under buildFolder
             awk -v dir="$buildFolder" '$2 ~ "^" dir {print $2}' /proc/mounts 2>/dev/null | sort -r | while IFS= read -r mnt; do
                 if [[ -n "$mnt" ]]; then
                     sudo umount -lf "$mnt" 2>/dev/null || true
                 fi
-            done
+            done || true
 
             log_info "Deleting build folder ($buildFolder)..."
-            sudo rm -rf "$buildFolder"
+            sudo rm -rf "$buildFolder" || true
             log_success "Build folder deleted."
         else
             log_info "No build folder found at $buildFolder. Nothing to delete."
@@ -548,12 +542,10 @@ if [[ "$installation_config_calamares" == "true" ]]; then
     # Ensure desktop directories exist in airootfs
     mkdir -p "$buildFolder/archiso/airootfs/etc/skel/Desktop"
     mkdir -p "$buildFolder/archiso/airootfs/home/liveuser/Desktop"
-    mkdir -p "$buildFolder/archiso/airootfs/usr/share/applications"
 
     # Find installer desktop file source
     calamares_desktop_src=""
     for src_candidate in \
-        "$ARCHISO_SRC/airootfs/usr/share/applications/xray-installer.desktop" \
         "$ARCHISO_SRC/airootfs/etc/skel/Desktop/xray-installer.desktop" \
         "/mnt/803910ca-b81c-4ed2-8ae6-9c1fbb26ffea/Development/Xray_OS/repositories/xray-calamares/xray-installer.desktop"; do
         if [[ -f "$src_candidate" ]]; then
@@ -565,13 +557,11 @@ if [[ "$installation_config_calamares" == "true" ]]; then
     if [[ -n "$calamares_desktop_src" ]]; then
         cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/etc/skel/Desktop/xray-installer.desktop"
         cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/home/liveuser/Desktop/xray-installer.desktop"
-        cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/usr/share/applications/xray-installer.desktop"
         rm -f "$buildFolder/archiso/airootfs/etc/skel/Desktop/calamares.desktop"
         rm -f "$buildFolder/archiso/airootfs/home/liveuser/Desktop/calamares.desktop"
-        rm -f "$buildFolder/archiso/airootfs/usr/share/applications/calamares.desktop"
+        rm -rf "$buildFolder/archiso/airootfs/usr"
         chmod 755 "$buildFolder/archiso/airootfs/etc/skel/Desktop/xray-installer.desktop" 2>/dev/null || true
         chmod 755 "$buildFolder/archiso/airootfs/home/liveuser/Desktop/xray-installer.desktop" 2>/dev/null || true
-        chmod 755 "$buildFolder/archiso/airootfs/usr/share/applications/xray-installer.desktop" 2>/dev/null || true
         log_success "xray-installer.desktop installed to /etc/skel/Desktop and /home/liveuser/Desktop"
     else
         log_warn "Could not locate xray-installer.desktop source file."
