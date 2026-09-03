@@ -386,8 +386,6 @@ archlinux-tools
 #=======================#
 # - Kernel and Headers
 #=======================#
-linux
-linux-headers
 linux-vita
 linux-vita-headers
 
@@ -753,3 +751,9 @@ qbittorrent
 gimp
 inkscape
 kdenlive
+
+#=======================#
+# - Memory & Swap Management
+#=======================#
+zram-generator
+

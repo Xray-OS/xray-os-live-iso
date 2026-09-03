@@ -31,4 +31,12 @@ file_permissions=(
   ["/etc/polkit-1/rules.d"]="0:0:750"
   ["/etc/sudoers.d"]="0:0:750"
   ["/etc/grub.d/40_custom"]="0:0:755"
+  ["/usr/local/bin/xray-live-desktop-setup"]="0:0:755"
+  ["/etc/skel/Desktop"]="0:0:755"
+  ["/etc/skel/Desktop/xray-installer.desktop"]="0:0:755"
+  ["/etc/skel/Desktop/calamares.desktop"]="0:0:755"
+  ["/home/liveuser"]="1000:1000:755"
+  ["/home/liveuser/Desktop"]="1000:1000:755"
+  ["/home/liveuser/Desktop/xray-installer.desktop"]="1000:1000:755"
+  ["/home/liveuser/Desktop/calamares.desktop"]="1000:1000:755"
 )

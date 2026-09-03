@@ -145,6 +145,8 @@ ${BOLD}OPTIONS:${RESET}
   -a, --audio <server>        Audio subsystem: pipewire | pulseaudio (default: pipewire)
   -v, --version <string>      ISO version string (default: v26.02.16.01)
   --iso-name <string>         ISO base name (default: xray)
+  --beta                      Mark build as beta (appends '-beta' to ISO name)
+  --no-beta                   Do not mark as beta (default)
   --xlibre                    Replace Xorg with xlibre display packages
   --no-xlibre                 Do not use xlibre (default)
   --chaotic                   Enable Chaotic-AUR repositories (default)
@@ -241,6 +243,7 @@ login_manager="sddm"
 audio="pipewire"
 xrayVersion="v26.02.16.01"
 iso_name="xray"
+beta=false
 
 chaoticsrepo=true
 xlibre=true
@@ -280,6 +283,14 @@ while [[ $# -gt 0 ]]; do
         --iso-name)
             iso_name="${2:-}"
             shift 2
+            ;;
+        --beta)
+            beta=true
+            shift
+            ;;
+        --no-beta)
+            beta=false
+            shift
             ;;
         --xlibre)
             xlibre=true
@@ -353,6 +364,12 @@ case "$audio" in
         ;;
 esac
 
+if [[ "$beta" == true ]]; then
+    if [[ "$iso_name" != *beta* && "$iso_name" != *Beta* ]]; then
+        iso_name="${iso_name}-beta"
+    fi
+fi
+
 isoLabel="${iso_name}-${xrayVersion}-x86_64.iso"
 
 ##################################################################################
@@ -394,6 +411,7 @@ log_info "Desktop Environment : $desktop"
 log_info "Login Manager       : $login_manager"
 log_info "Audio System        : $audio"
 log_info "ISO Base Name       : $iso_name"
+log_info "Beta Build          : $beta"
 log_info "ISO Version Tag     : $xrayVersion"
 log_info "Expected ISO Output : $isoLabel"
 log_info "Build Directory     : $buildFolder"
@@ -524,12 +542,39 @@ PACKAGES_FILE="$buildFolder/archiso/packages.x86_64"
 
 # Calamares installer configuration
 if [[ "$installation_config_calamares" == "true" ]]; then
-    log_info "Configuring Calamares installer packages..."
+    log_info "Configuring Calamares installer packages and desktop launchers..."
     sed -i 's|^xray-installation-config-|xray-installation-config-calamares-|g' "$PACKAGES_FILE"
 
-    if [[ -f "$buildFolder/archiso/airootfs/usr/share/applications/xray-installer.desktop" ]]; then
-        mkdir -p "$buildFolder/archiso/airootfs/etc/skel/Desktop"
-        cp -f "$buildFolder/archiso/airootfs/usr/share/applications/xray-installer.desktop" "$buildFolder/archiso/airootfs/etc/skel/Desktop/"
+    # Ensure desktop directories exist in airootfs
+    mkdir -p "$buildFolder/archiso/airootfs/etc/skel/Desktop"
+    mkdir -p "$buildFolder/archiso/airootfs/home/liveuser/Desktop"
+    mkdir -p "$buildFolder/archiso/airootfs/usr/share/applications"
+
+    # Find installer desktop file source
+    calamares_desktop_src=""
+    for src_candidate in \
+        "$ARCHISO_SRC/airootfs/usr/share/applications/xray-installer.desktop" \
+        "$ARCHISO_SRC/airootfs/etc/skel/Desktop/xray-installer.desktop" \
+        "/mnt/803910ca-b81c-4ed2-8ae6-9c1fbb26ffea/Development/Xray_OS/repositories/xray-calamares/xray-installer.desktop"; do
+        if [[ -f "$src_candidate" ]]; then
+            calamares_desktop_src="$src_candidate"
+            break
+        fi
+    done
+
+    if [[ -n "$calamares_desktop_src" ]]; then
+        cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/etc/skel/Desktop/xray-installer.desktop"
+        cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/etc/skel/Desktop/calamares.desktop"
+        cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/home/liveuser/Desktop/xray-installer.desktop"
+        cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/home/liveuser/Desktop/calamares.desktop"
+        cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/usr/share/applications/xray-installer.desktop"
+        cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/usr/share/applications/calamares.desktop"
+        chmod 755 "$buildFolder/archiso/airootfs/etc/skel/Desktop/"*.desktop 2>/dev/null || true
+        chmod 755 "$buildFolder/archiso/airootfs/home/liveuser/Desktop/"*.desktop 2>/dev/null || true
+        chmod 755 "$buildFolder/archiso/airootfs/usr/share/applications/"*.desktop 2>/dev/null || true
+        log_success "Calamares desktop launcher installed to /etc/skel/Desktop and /home/liveuser/Desktop"
+    else
+        log_warn "Could not locate xray-installer.desktop source file."
     fi
 fi
 

@@ -1,0 +1,311 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install Xray_OS
+GenericName=System Installer
+Keywords=calamares;system;installer;
+TryExec=calamares
+Exec=sh -c "pkexec calamares"
+Comment=Xray_OS Calamares — System Installer
+Icon=xray-icon
+Terminal=false
+StartupNotify=true
+Categories=Qt;System;
+X-AppStream-Ignore=true
+
+# Árabe
+Name[ar]=تثبيت Xray_OS
+GenericName[ar]=مثبت النظام
+Comment[ar]=كالامارس - مثبت نظام Xray_OS
+
+# Asamés
+Name[as]=Xray_OS ইনস্তল কৰক
+GenericName[as]=চিছটেম ইনস্তলাৰ
+Comment[as]=কেলামাৰেচ — Xray_OS চিছটেম​ ইনস্তলাৰ
+
+# Asturiano
+Name[ast]=Instalar Xray_OS
+GenericName[ast]=Instalador del sistema
+Comment[ast]=Calamares — Instalador del sistema Xray_OS
+
+# Azerí
+Name[az]=Xray_OS Quraşdırmaq
+GenericName[az]=Sistem Quraşdırıcısı
+Comment[az]=Calamares — Xray_OS Sistem Quraşdırıcısı
+
+Name[az_AZ]=Xray_OS quraşdırmaq
+GenericName[az_AZ]=Sistem quraşdırcısı
+Comment[az_AZ]=Calamares — Xray_OS Sistem Quraşdırıcısı
+
+# Bielorruso
+Name[be]=Усталяваць Xray_OS
+GenericName[be]=Усталёўшчык сістэмы
+Comment[be]=Calamares — усталёўшчык сістэмы Xray_OS
+
+# Búlgaro
+Name[bg]=Инсталирай Xray_OS
+GenericName[bg]=Системен инсталатор
+Comment[bg]=„Calamares“ – Системен инсталатор на Xray_OS
+
+# Bengalí
+Name[bn]=Xray_OS ইনস্টল করুন
+GenericName[bn]=সিস্টেম ইনস্টলার
+Comment[bn]=ক্যালামারেস - Xray_OS সিস্টেম ইনস্টলার
+
+# Catalán
+Name[ca]=Instal·la Xray_OS
+GenericName[ca]=Instal·lador de sistema
+Comment[ca]=Calamares — Instal·lador de sistema Xray_OS
+
+# Checo
+Name[cs_CZ]=Nainstalovat Xray_OS
+GenericName[cs_CZ]=Instalátor systému
+Comment[cs_CZ]=Calamares – instalátor systému Xray_OS
+
+# Danés
+Name[da]=Installér Xray_OS
+GenericName[da]=Systeminstallationsprogram
+Comment[da]=Calamares — Systeminstallationsprogram til Xray_OS
+
+# Alemán
+Name[de]=Xray_OS installieren
+GenericName[de]=Installation des Betriebssystems
+Comment[de]=Calamares - Installation von Xray_OS
+
+# Griego
+Name[el]=Εγκατάσταση του Xray_OS
+GenericName[el]=Εγκατάσταση συστήματος
+Comment[el]=Calamares — Εγκατάσταση συστήματος Xray_OS
+
+# Inglés británico
+Name[en_GB]=Install Xray_OS
+GenericName[en_GB]=System Installer
+Comment[en_GB]=Calamares — Xray_OS System Installer
+
+# Esperanto
+Name[eo]=Instali Xray_OS
+GenericName[eo]=Sistema Instalilo
+Comment[eo]=Calamares — Sistema Instalilo de Xray_OS
+
+# Español
+Name[es]=Instalar Xray_OS
+GenericName[es]=Instalador del sistema
+Comment[es]=Calamares — Instalador del sistema Xray_OS
+
+Name[es_MX]=Instalar Xray_OS
+GenericName[es_MX]=Instalador del sistema
+Comment[es_MX]=Calamares - Instalador del sistema Xray_OS
+
+Name[es_PR]=Instalar Xray_OS
+GenericName[es_PR]=Instalador del sistema
+Comment[es_PR]=Calamares - Instalador del sistema Xray_OS
+
+# Estonio
+Name[et]=Paigalda Xray_OS
+GenericName[et]=Süsteemipaigaldaja
+Comment[et]=Calamares — Xray_OS süsteemipaigaldaja
+
+# Euskera
+Name[eu]=Instalatu Xray_OS
+GenericName[eu]=Sistema instalatzailea
+Comment[eu]=Calamares - Xray_OS sistema instalatzailea
+
+# Persa
+Name[fa]=نصب Xray_OS
+GenericName[fa]=نصب‌کننده سامانه
+Comment[fa]=کالامارس — نصب‌کننده سامانه Xray_OS
+
+# Finlandés
+Name[fi_FI]=Asenna Xray_OS
+GenericName[fi_FI]=Järjestelmän asennusohjelma
+Comment[fi_FI]=Calamares — Xray_OS-järjestelmän asentaja
+
+# Francés
+Name[fr]=Installer Xray_OS
+GenericName[fr]=Installateur système
+Comment[fr]=Calamares - Installateur du système Xray_OS
+
+# Friulano
+Name[fur]=Instale Xray_OS
+GenericName[fur]=Program di instalazion dal sisteme
+Comment[fur]=Calamares — Program di instalazion dal sisteme Xray_OS
+
+# Gallego
+Name[gl]=Instalar Xray_OS
+GenericName[gl]=Instalador de sistemas
+Comment[gl]=Calamares — Instalador do sistema Xray_OS
+
+# Hebreo
+Name[he]=התקנת Xray_OS
+GenericName[he]=אשף התקנה
+Comment[he]=Calamares - אשף התקנת Xray_OS
+
+# Hindi
+Name[hi]=Xray_OS इंस्टॉल करें
+GenericName[hi]=सिस्टम इंस्टॉलर
+Comment[hi]=Calamares — Xray_OS सिस्टम इंस्टॉलर
+
+# Croata
+Name[hr]=Instaliraj Xray_OS
+GenericName[hr]=Instalacija sustava
+Comment[hr]=Calamares — Instalacija sustava Xray_OS
+
+# Húngaro
+Name[hu]=Xray_OS telepítése
+GenericName[hu]=Rendszertelepítő
+Comment[hu]=Calamares – Xray_OS rendszertelepítő
+
+# Indonesio
+Name[id]=Instal Xray_OS
+GenericName[id]=Pemasang Sistem
+Comment[id]=Calamares — Pemasang Sistem Xray_OS
+
+# Interlingue
+Name[ie]=Installar Xray_OS
+GenericName[ie]=Installator del sistema
+Comment[ie]=Calamares — Installator del sistema Xray_OS
+
+# Islandés
+Name[is]=Setja upp Xray_OS
+GenericName[is]=Kerfis uppsetning
+Comment[is]=Calamares — Xray_OS kerfis uppsetning
+
+# Italiano
+Name[it_IT]=Installa Xray_OS
+GenericName[it_IT]=Programma d'installazione del sistema
+Comment[it_IT]=Calamares — Programma d'installazione del sistema Xray_OS
+
+# Japonés
+Name[ja]=Xray_OS をインストール
+GenericName[ja]=システムインストーラー
+Comment[ja]=Calamares — Xray_OS システムインストーラー
+
+# Coreano
+Name[ko]=Xray_OS 설치
+GenericName[ko]=시스템 설치 관리자
+Comment[ko]=깔라마레스 — Xray_OS 시스템 설치 관리자
+
+# Lituano
+Name[lt]=Įdiegti Xray_OS
+GenericName[lt]=Sistemos diegimas į kompiuterį
+Comment[lt]=Calamares — Xray_OS sistemos diegimo programa
+
+# Macedonio
+Name[mk]=Инсталирај го Xray_OS
+GenericName[mk]=Системен Инсталер
+Comment[mk]=Calamares - Системен Инсталер на Xray_OS
+
+# Malayalam
+Name[ml]=Xray_OS ഇൻസ്റ്റാൾ ചെയ്യുക
+GenericName[ml]=സിസ്റ്റം ഇൻസ്റ്റാളർ
+Comment[ml]=കലാമാരേസ് - Xray_OS സിസ്റ്റം ഇൻസ്റ്റാളർ
+
+# Noruego Bokmål
+Name[nb]=Installer Xray_OS
+GenericName[nb]=Systeminstallatør
+Comment[nb]=Calamares — Systeminstallatør for Xray_OS
+
+# Nepalí
+Name[ne_NP]=Xray_OS इन्स्टल गर्नुहोस्
+GenericName[ne_NP]=सिस्टम इन्स्टलर
+Comment[ne_NP]=Calamares - Xray_OS सिस्टम इन्स्टलर
+
+# Neerlandés
+Name[nl]=Xray_OS installeren
+GenericName[nl]=Installatieprogramma
+Comment[nl]=Calamares — Xray_OS installatieprogramma
+
+# Polaco
+Name[pl]=Zainstaluj Xray_OS
+GenericName[pl]=Instalator systemu
+Comment[pl]=Calamares — Instalator systemu Xray_OS
+
+# Portugués (Brasil)
+Name[pt_BR]=Instalar Xray_OS
+GenericName[pt_BR]=Instalador de Sistema
+Comment[pt_BR]=Calamares — Instalador do Sistema Xray_OS
+
+# Portugués (Portugal)
+Name[pt_PT]=Instalar Xray_OS
+GenericName[pt_PT]=Instalador de Sistema
+Comment[pt_PT]=Calamares — Instalador do Sistema Xray_OS
+
+# Rumano
+Name[ro]=Instalează Xray_OS
+GenericName[ro]=Instalator de sistem
+Comment[ro]=Calamares — Instalator del sistem Xray_OS
+
+# Ruso
+Name[ru]=Установить Xray_OS
+GenericName[ru]=Установщик системы
+Comment[ru]=Calamares - Установщик системы Xray_OS
+
+# Cingalés
+Name[si]=Xray_OS ස්ථාපනය කරන්න
+GenericName[si]=පද්ධති ස්ථාපකය
+Comment[si]=Calamares - Xray_OS පද්ධති ස්ථාපකය
+
+# Eslovaco
+Name[sk]=Inštalovať Xray_OS
+GenericName[sk]=Inštalátor systému
+Comment[sk]=Calamares — Inštalátor systému Xray_OS
+
+# Esloveno
+Name[sl]=Namesti Xray_OS
+GenericName[sl]=Namestitveni program
+Comment[sl]=Calamares — Namestitveni program za Xray_OS
+
+# Albanés
+Name[sq]=Instalo Xray_OS
+GenericName[sq]=Instalues Sistemi
+Comment[sq]=Calamares — Instalues Sistemi Xray_OS
+
+# Serbio (Cirílico)
+Name[sr]=Инсталирај Xray_OS
+GenericName[sr]=Инсталатер система
+Comment[sr]=Каламарес — инсталатер система Xray_OS
+
+# Serbio (Latino)
+Name[sr@latin]=Instaliraj Xray_OS
+GenericName[sr@latin]=Instaliraj sistem
+Comment[sr@latin]=Calamares — instalater sistema Xray_OS
+
+# Sueco
+Name[sv]=Installera Xray_OS
+GenericName[sv]=Systeminstallerare
+Comment[sv]=Calamares — Systeminstallerare för Xray_OS
+
+# Tayiko
+Name[tg]=Насбкунии Xray_OS
+GenericName[tg]=Насбкунандаи низомӣ
+Comment[tg]=Calamares — Насбкунандаи низоми Xray_OS
+
+# Tailandés
+Name[th]=ติดตั้ง Xray_OS
+GenericName[th]=ตัวติดตั้งระบบ
+Comment[th]=Calamares — ตัวติดตั้งระบบ Xray_OS
+
+# Turco
+Name[tr_TR]=Xray_OS Yükle
+GenericName[tr_TR]=Sistem Yükleyici
+Comment[tr_TR]=Calamares — Xray_OS Sistem Yükleyici
+
+# Ucraniano
+Name[uk]=Встановити Xray_OS
+GenericName[uk]=Встановлювач системи
+Comment[uk]=Calamares - Встановлювач системи Xray_OS
+
+# Vietnamita
+Name[vi]=Cài đặt Xray_OS
+GenericName[vi]=Bộ cài đặt hệ thống
+Comment[vi]=Calamares — Bộ cài đặt hệ thống Xray_OS
+
+# Chino Simplificado
+Name[zh_CN]=安装 Xray_OS
+GenericName[zh_CN]=系统安装程序
+Comment[zh_CN]=Calamares — Xray_OS 系统安装程序
+
+# Chino Tradicional
+Name[zh_TW]=安裝 Xray_OS
+GenericName[zh_TW]=系統安裝程式
+Comment[zh_TW]=Calamares ── Xray_OS 系統安裝程式
