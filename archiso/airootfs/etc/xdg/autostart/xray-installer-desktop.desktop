@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Xray Live Desktop Setup
-Exec=/usr/local/bin/xray-live-desktop-setup
-Hidden=false
-NoDisplay=true
-X-GNOME-Autostart-enabled=true
-X-KDE-autostart-phase=2
