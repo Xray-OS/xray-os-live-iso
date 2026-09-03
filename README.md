@@ -31,14 +31,16 @@ We adhere strictly to the principle of **"Separating the Art from the Artist"**�
 ### 🧠 Smart Memory & Process Management
 * **Native ZRAM Swap (`zstd`)**: Out-of-the-box dynamic compressed RAM swap (`zram-generator`) tuned with aggressive `swappiness=180` for instant app switching and zero disk-thrashing.
 * **Systemd-OOMD with PSI**: Real-time Pressure Stall Information monitoring with custom cgroup slice policies (`user-.slice`, `system.slice`) to eliminate desktop freezes under heavy memory workloads.
+* **Custom Ananicy-CPP Rules (`xray-ananicy-rules`)**: In-house process auto-nice and IO scheduler rules specially crafted for Xray_OS, giving top priority to active games, audio playback, and foreground apps while subduing background tasks.
 * **Tuned Kernel Sysctl**: Low VFS cache pressure (`vfs_cache_pressure=50`), `page-cluster=0`, and high `vm.max_map_count` for AAA games and heavy virtual machines.
 
 ### 🐧 Custom `linux-vita` Kernel
 * Custom-compiled, low-latency kernel tailored for desktop fluidity and gaming.
 * Built-in support for modern CPU architectures, BBR congestion control, NVMe optimizations, and native PSI (*Pressure Stall Information*).
 
-### 🛡️ SystemD-Liberated
-* Clean, unencumbered system management stripped of age-verification code and invasive tracking while maintaining 100% service compatibility.
+### 🛡️ SystemD-Liberated & Ideological Freedom
+* **SystemD-Liberated**: Clean, unencumbered system management stripped of age-verification code and invasive tracking while maintaining 100% service compatibility.
+* **Bazaar-Desinfected App Store**: Includes a customized, sanitized build of Bazaar (Flatpak/Flathub App Store) completely purged of political/ideological banners, moralizing pop-ups, and activist codes of conduct. Pure software discovery without interference.
 
 ---
 
@@ -70,7 +72,7 @@ Out-of-the-box support for modern Linux gaming and emulation:
 * **Web Browsers**: Floorp, Waterfox, Brave, Vivaldi, Opera / Opera-GX, Firefox.
 * **Development & AI**: VS Codium, Zed Editor, Antigravity AI assistant, Git, full GCC/Clang/Rust toolchains.
 * **Creativity & Office**: LibreOffice Fresh, GIMP, Inkscape, Kdenlive, Kate, Obsidian.
-* **Privacy & Media**: KeePassXC, FreeTube, qBittorrent, Bazaar-Desinfected.
+* **Privacy & Media**: KeePassXC, FreeTube, qBittorrent, Bazaar-Desinfected (ideology-free App Store).
 * **Audio Architecture**: Full PipeWire + WirePlumber stack with low-latency ALSA, PulseAudio, and JACK compatibility.
 
 ---
