@@ -90,6 +90,13 @@ Out-of-the-box support for modern Linux gaming and emulation:
 
 ---
 
+## 🔮 Roadmap & What's Ahead
+
+* 🛠️ **Tolítica (Under Reconstruction)**: Currently undergoing a complete rewrite and overhaul—it will be ready and reintroduced very soon!
+* 🌌 **MísticaDE (Upcoming In-House Desktop Environment)**: An ambitious new project to build our very own native Desktop Environment designed specifically for Xray_OS, built from the ground up for maximum speed, minimalism, and aesthetic excellence.
+
+---
+
 ## 🌐 Links & Resources
 
 * **Report an Issue / Feedback**: [GitHub Issues](https://github.com/xray-os/xray-os-live-iso/issues)
