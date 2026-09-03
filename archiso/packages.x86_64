@@ -386,6 +386,8 @@ archlinux-tools
 #=======================#
 # - Kernel and Headers
 #=======================#
+linux
+linux-headers
 linux-vita
 linux-vita-headers
 
