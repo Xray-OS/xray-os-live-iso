@@ -1,5 +1,0 @@
-# Distribution defaults
-[Daemon]
-Theme=xray-os-cinematic
-ShowDelay=0
-DeviceTimeout=8

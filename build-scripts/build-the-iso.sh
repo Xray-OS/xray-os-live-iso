@@ -526,8 +526,7 @@ safe_download "https://gitlab.com/xr-os/xray-generic-mirrorlists/-/raw/main/etc/
 
 # Configure plymouth theme (xray-os-cinematic)
 mkdir -p "$buildFolder/archiso/airootfs/etc/plymouth"
-mkdir -p "$buildFolder/archiso/airootfs/usr/share/plymouth"
-printf "[Daemon]\nTheme=xray-os-cinematic\nShowDelay=0\nDeviceTimeout=8\n" | tee "$buildFolder/archiso/airootfs/etc/plymouth/plymouthd.conf" "$buildFolder/archiso/airootfs/usr/share/plymouth/plymouthd.defaults" >/dev/null
+printf "[Daemon]\nTheme=xray-os-cinematic\nShowDelay=0\nDeviceTimeout=8\n" | tee "$buildFolder/archiso/airootfs/etc/plymouth/plymouthd.conf" >/dev/null
 
 # Reset packages.x86_64 from source
 log_info "Refreshing package manifest from $ARCHISO_SRC/packages.x86_64..."
