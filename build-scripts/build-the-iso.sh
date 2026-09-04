@@ -524,10 +524,10 @@ safe_download "https://gitlab.com/xr-os/xray-generic-mirrorlists/-/raw/main/etc/
     "$buildFolder/archiso/airootfs/etc/pacman.d/xray-generic-repos" \
     "xray generic repos"
 
-# Fetch latest plymouth config
-safe_download "https://gitlab.com/xr-os/xray-plymouth-config/-/raw/main/etc/plymouth/plymouthd.conf" \
-    "$buildFolder/archiso/airootfs/etc/plymouth/plymouthd.conf" \
-    "plymouth configuration"
+# Configure plymouth theme (xray-os-cinematic)
+mkdir -p "$buildFolder/archiso/airootfs/etc/plymouth"
+mkdir -p "$buildFolder/archiso/airootfs/usr/share/plymouth"
+printf "[Daemon]\nTheme=xray-os-cinematic\nShowDelay=0\nDeviceTimeout=8\n" | tee "$buildFolder/archiso/airootfs/etc/plymouth/plymouthd.conf" "$buildFolder/archiso/airootfs/usr/share/plymouth/plymouthd.defaults" >/dev/null
 
 # Reset packages.x86_64 from source
 log_info "Refreshing package manifest from $ARCHISO_SRC/packages.x86_64..."
@@ -537,7 +537,7 @@ PACKAGES_FILE="$buildFolder/archiso/packages.x86_64"
 # Calamares installer configuration
 if [[ "$installation_config_calamares" == "true" ]]; then
     log_info "Configuring Calamares installer packages and desktop launchers..."
-    sed -i 's|^xray-installation-config-|xray-installation-config-calamares-|g' "$PACKAGES_FILE"
+    sed -i 's|^xray-installation-config$|xray-installation-config-calamares|g' "$PACKAGES_FILE"
 
     # Ensure desktop directories exist in airootfs
     mkdir -p "$buildFolder/archiso/airootfs/etc/skel/Desktop"
@@ -559,7 +559,7 @@ if [[ "$installation_config_calamares" == "true" ]]; then
         cp -f "$calamares_desktop_src" "$buildFolder/archiso/airootfs/home/liveuser/Desktop/xray-installer.desktop"
         rm -f "$buildFolder/archiso/airootfs/etc/skel/Desktop/calamares.desktop"
         rm -f "$buildFolder/archiso/airootfs/home/liveuser/Desktop/calamares.desktop"
-        rm -rf "$buildFolder/archiso/airootfs/usr"
+        rm -f "$buildFolder/archiso/airootfs/usr/share/applications/calamares.desktop"
         chmod 755 "$buildFolder/archiso/airootfs/etc/skel/Desktop/xray-installer.desktop" 2>/dev/null || true
         chmod 755 "$buildFolder/archiso/airootfs/home/liveuser/Desktop/xray-installer.desktop" 2>/dev/null || true
         log_success "xray-installer.desktop installed to /etc/skel/Desktop and /home/liveuser/Desktop"
