@@ -1,0 +1,66 @@
+#####################################
+#       GAMING
+####################################
+
+#=======================#
+# xray gaming packs
+#=======================#
+xray-gaming-meta
+xray-gaming-applications
+
+#=======================#
+# - Utilities
+#=======================#
+#alsa-plugins
+#giflib
+#glfw
+#gst-plugins-base-libs
+#lib32-alsa-plugins
+#lib32-giflib
+#lib32-gtk3
+#lib32-libjpeg-turbo
+#lib32-libva
+#lib32-mpg123
+#lib32-ocl-icd
+#lib32-opencl-icd-loader
+#lib32-openal
+#libjpeg-turbo
+#libva
+#libxslt
+#mpg123
+#opencl-icd-loader
+#openal
+#umu-launcher
+#ttf-liberation
+#vulkan-tools
+#gamemode
+#lib32-gamemode
+
+#gamescope
+#goverlay
+#lib32-mangohud
+#mangohud
+#wqy-zenhei
+#protonplus
+
+#=======================#
+# - Compatibility Layers
+#=======================#
+#wine-staging
+#wine
+#proton-cachyos-slr
+
+#=====================================#
+# - Utilities for Compatibility Layers
+#=====================================#
+#winetricks
+#protontricks
+
+#=======================#
+# - Launchers
+#=======================#
+#steam
+#lutris
+#heroic-games-launcher
+#faugus-launcher
+#portproton

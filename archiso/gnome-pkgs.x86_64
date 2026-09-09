@@ -1,0 +1,10 @@
+#########################################
+#       DESKTOP ENVIRONMENT: GNOME START
+#########################################
+gnome
+gnome-extra
+xray-gnome-settings
+
+#########################################
+#       DESKTOP ENVIRONMENT: GNOME END
+#########################################

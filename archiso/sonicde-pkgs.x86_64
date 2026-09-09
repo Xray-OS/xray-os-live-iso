@@ -1,0 +1,30 @@
+#########################################
+#       DESKTOP ENVIRONMENT: SONICDE START
+#########################################
+sonicde
+sonic-activities
+sonic-audio-applet-pulse
+sonic-decoration
+sonic-desktop-interface
+sonic-interface-libraries
+sonic-keybind-daemon
+sonic-login-manager
+sonic-network-manager
+sonic-night-light
+sonic-screen
+sonic-screen-library
+sonic-screenlocker
+sonic-silver-sddm
+sonic-silver-theme
+sonic-sysguard-library
+sonic-system-info
+sonic-win
+sonic-workspace
+sonic-workspace-addons
+sonic-workspace-wallpapers
+sonic-x11-session
+xray-sonicde-settings
+
+#########################################
+#       DESKTOP ENVIRONMENT: SONICDE END
+#########################################

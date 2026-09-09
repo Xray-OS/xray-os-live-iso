@@ -1,0 +1,42 @@
+#########################################
+#       DESKTOP ENVIRONMENT: XFCE START
+#########################################
+xray-xfce-settings
+#xray-xfce-settings-laptop
+xfce4
+xfce4-goodies
+
+#####################################
+#       XFCE-UTILITIES
+####################################
+gvfs
+gvfs-afc
+gvfs-gphoto2
+gvfs-mtp
+gvfs-nfs
+gvfs-smb
+gvfs-dnssd
+flameshot
+#archlinux-tweak-tool-git
+xcape
+arandr
+catfish
+evince
+file-roller
+gnome-disk-utility
+gnome-keyring
+gnome-screenshot
+nomacs
+playerctl
+polkit-gnome
+qt5ct
+gittyup
+hardcode-fixer-git
+mugshot
+autorandr
+volumeicon
+arc-gtk-theme
+
+#########################################
+#       DESKTOP ENVIRONMENT: XFCE END
+#########################################

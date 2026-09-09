@@ -9,6 +9,8 @@
 #   -d, --desktop <name>        Desktop environment: xfce | plasma | gnome | sonicde (default: xfce)
 #   -l, --login-manager <name>  Login manager: sddm | plasma-login-manager | gdm | lightdm | sonic-login-manager (default: sddm)
 #   -a, --audio <server>        Audio subsystem: pipewire | pulseaudio (default: pipewire)
+#   -g, --gaming                Include gaming packages (gaming-pkgs.x86_64)
+#   --no-gaming                 Do not include gaming packages (default)
 #   -v, --version <string>      ISO version tag (default: v26.02.16.01)
 #   --iso-name <string>         ISO base name (default: xray)
 #   --xlibre                    Enable xlibre display protocol packages
@@ -143,6 +145,8 @@ ${BOLD}OPTIONS:${RESET}
   -d, --desktop <name>        Desktop environment: xfce | plasma | gnome | sonicde (default: xfce)
   -l, --login-manager <name>  Login manager: sddm | plasma-login-manager | gdm | lightdm | sonic-login-manager (default: sddm)
   -a, --audio <server>        Audio subsystem: pipewire | pulseaudio (default: pipewire)
+  -g, --gaming                Include gaming packages (gaming-pkgs.x86_64)
+  --no-gaming                 Do not include gaming packages (default)
   -v, --version <string>      ISO version string (default: v26.02.16.01)
   --iso-name <string>         ISO base name (default: xray)
   --beta                      Mark build as beta (appends '-beta' to ISO name)
@@ -235,6 +239,7 @@ safe_download() {
 desktop="xfce"
 login_manager="sddm"
 audio="pipewire"
+gaming=false
 xrayVersion="v26.02.16.01"
 iso_name="xray"
 beta=false
@@ -269,6 +274,14 @@ while [[ $# -gt 0 ]]; do
         -a|--audio)
             audio="${2:-}"
             shift 2
+            ;;
+        -g|--gaming)
+            gaming=true
+            shift
+            ;;
+        --no-gaming)
+            gaming=false
+            shift
             ;;
         -v|--version)
             xrayVersion="${2:-}"
@@ -404,6 +417,7 @@ log_phase "1" "Setting Parameters & Repositories"
 log_info "Desktop Environment : $desktop"
 log_info "Login Manager       : $login_manager"
 log_info "Audio System        : $audio"
+log_info "Gaming Packages     : $gaming"
 log_info "ISO Base Name       : $iso_name"
 log_info "Beta Build          : $beta"
 log_info "ISO Version Tag     : $xrayVersion"
@@ -570,69 +584,56 @@ fi
 # Desktop Environment Package Customizations
 log_info "Applying package customizations for desktop: $desktop"
 
+de_pkg_file=""
 case "$desktop" in
     "xfce")
-        # Strip Plasma
-        sed -i '/^plasma/d; /^dolphin/d; /^dolphin-plugins/d; /^kio-admin/d; /^kdegraphics-thumbnailers/d' "$PACKAGES_FILE"
-        sed -i '/^ark/d; /^kcalc/d; /^gwenview/d; /^spectacle/d; /^kdeconnect/d; /^kwalletmanager/d; /^konsole/d' "$PACKAGES_FILE"
-        sed -i '/^tolitica-plasma-theme/d; /^xray-kde-dark/d; /^xray-kde-settings/d; /^arch-kde-theme/d; /^dtos-kde-theme/d; /^viper-kde-theme/d' "$PACKAGES_FILE"
-        sed -i '/^kwin-x11/d; /^kwayland-integration/d' "$PACKAGES_FILE"
-
-        # Strip GNOME
-        sed -i '/^gnome/d; /^gnome-extra/d; /^xray-gnome-settings/d' "$PACKAGES_FILE"
-
-        # Strip SonicDE
-        sed -i '/^sonic/d; /^xray-sonicde-settings/d' "$PACKAGES_FILE"
-
+        de_pkg_file="${ARCHISO_SRC}/xfce-pkgs.x86_64"
         # Set wallpapers
         sed -i 's/^xray-wallpapers$/xray-xfce-wallpapers/' "$PACKAGES_FILE"
         ;;
 
     "plasma")
-        # Strip XFCE
-        sed -i '/^xfce4/d; /^xray-xfce-settings/d; /^gvfs/d; /^flameshot/d; /^vlc/d; /^xcape/d; /^arandr/d; /^catfish/d' "$PACKAGES_FILE"
-        sed -i '/^evince/d; /^file-roller/d; /^gnome-disk-utility/d; /^gnome-keyring/d; /^gnome-screenshot/d; /^nomacs/d; /^playerctl/d; /^polkit-gnome/d; /^qt5ct/d; /^gittyup/d; /^hardcode-fixer-git/d; /^mugshot/d; /^autorandr/d; /^volumeicon/d; /^surfn-icons-git/d; /^numix-icon-theme-git/d; /^numix-circle-icon-theme-git/d; /^sardi-icons/d' "$PACKAGES_FILE"
-
-        # Strip GNOME
-        sed -i '/^gnome/d; /^gnome-extra/d; /^xray-gnome-settings/d' "$PACKAGES_FILE"
-
-        # Strip SonicDE
-        sed -i '/^sonic/d; /^xray-sonicde-settings/d' "$PACKAGES_FILE"
-
+        de_pkg_file="${ARCHISO_SRC}/kde-pkgs.x86_64"
         # Set wallpapers
         sed -i 's/^xray-xfce-wallpapers$/xray-wallpapers/' "$PACKAGES_FILE"
         ;;
 
     "sonicde")
-        # Strip XFCE
-        sed -i '/^xfce4/d; /^xray-xfce-settings/d; /^gvfs/d; /^flameshot/d; /^vlc/d; /^xcape/d; /^arandr/d; /^catfish/d' "$PACKAGES_FILE"
-        sed -i '/^evince/d; /^file-roller/d; /^gnome-disk-utility/d; /^gnome-keyring/d; /^gnome-screenshot/d; /^nomacs/d; /^playerctl/d; /^polkit-gnome/d; /^qt5ct/d; /^gittyup/d; /^hardcode-fixer-git/d; /^mugshot/d; /^autorandr/d; /^volumeicon/d; /^surfn-icons-git/d; /^numix-icon-theme-git/d; /^numix-circle-icon-theme-git/d; /^sardi-icons/d' "$PACKAGES_FILE"
-
-        # Strip GNOME
-        sed -i '/^gnome/d; /^gnome-extra/d; /^xray-gnome-settings/d' "$PACKAGES_FILE"
-
-        # Strip Plasma
-        sed -i '/^plasma/d; /^kwin-x11/d; /^xray-kde-settings/d; /^xray-kde-dark/d' "$PACKAGES_FILE"
-
+        de_pkg_file="${ARCHISO_SRC}/sonicde-pkgs.x86_64"
         # Set wallpapers
         sed -i 's/^xray-xfce-wallpapers$/xray-wallpapers/' "$PACKAGES_FILE"
         ;;
 
     "gnome")
-        # Strip XFCE
-        sed -i '/^gvfs/d; /^flameshot/d; /^xcape/d; /^arandr/d; /^catfish/d; /^evince/d; /^file-roller/d; /^nomacs/d; /^playerctl/d; /^qt5ct/d; /^gittyup/d; /^hardcode-fixer-git/d; /^mugshot/d; /^autorandr/d; /^volumeicon/d; /^xray-xfce-settings/d' "$PACKAGES_FILE"
-
-        # Strip Plasma
-        sed -i '/^plasma/d; /^dolphin/d; /^dolphin-plugins/d; /^kio-admin/d; /^kdegraphics-thumbnailers/d; /^ark/d; /^kcalc/d; /^gwenview/d; /^spectacle/d; /^kdeconnect/d; /^kwalletmanager/d; /^konsole/d' "$PACKAGES_FILE"
-        sed -i '/^tolitica-plasma-theme/d; /^xray-kde-dark/d; /^xray-kde-settings/d; /^arch-kde-theme/d; /^dtos-kde-theme/d; /^viper-kde-theme/d; /^kwin-x11/d; /^kwayland-integration/d' "$PACKAGES_FILE"
-
-        # Strip SonicDE
-        sed -i '/^sonic/d; /^xray-sonicde-settings/d' "$PACKAGES_FILE"
-
+        de_pkg_file="${ARCHISO_SRC}/gnome-pkgs.x86_64"
         # Set wallpapers
         sed -i 's/^xray-wallpapers$/xray-gnome-wallpapers/' "$PACKAGES_FILE"
         ;;
 esac
+
+if [[ -n "$de_pkg_file" && -f "$de_pkg_file" ]]; then
+    log_info "Appending desktop packages from $de_pkg_file..."
+    printf '\n# --- Desktop Environment (%s) Packages ---\n' "$desktop" >> "$PACKAGES_FILE"
+    cat "$de_pkg_file" >> "$PACKAGES_FILE"
+    log_success "Desktop packages appended for: $desktop"
+else
+    log_warn "Desktop package manifest not found: $de_pkg_file"
+fi
+
+# Gaming Package Selection
+if [[ "$gaming" == "true" ]]; then
+    gaming_pkg_file="${ARCHISO_SRC}/gaming-pkgs.x86_64"
+    if [[ -f "$gaming_pkg_file" ]]; then
+        log_info "Appending gaming packages from $gaming_pkg_file..."
+        printf '\n# --- Gaming Packages ---\n' >> "$PACKAGES_FILE"
+        cat "$gaming_pkg_file" >> "$PACKAGES_FILE"
+        log_success "Gaming packages appended."
+    else
+        log_warn "Gaming package manifest not found: $gaming_pkg_file"
+    fi
+else
+    log_info "Gaming packages disabled — skipping gaming manifest."
+fi
 
 # Display Manager Configuration
 log_info "Configuring login manager: $login_manager"

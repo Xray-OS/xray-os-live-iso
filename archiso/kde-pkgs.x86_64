@@ -1,0 +1,60 @@
+#########################################
+#       DESKTOP ENVIRONMENT: PLASMA START
+#########################################
+plasma
+xray-kde-settings
+
+#=======================#
+# - File Manager
+#=======================#
+dolphin
+dolphin-plugins
+kio-admin
+ffmpegthumbs
+kdegraphics-thumbnailers
+
+#=======================#
+# - Utilities
+#=======================#
+ark
+kcalc
+kdeconnect
+kdenetwork-filesharing
+gwenview
+spectacle
+kate
+kamoso
+partitionmanager
+gparted
+plasma-x11-session
+okular
+kolourpaint
+drawy
+filelight
+kwalletmanager
+libappindicator
+kwin-x11
+kwayland-integration
+kvantum
+
+#=======================#
+# - Terminal
+#=======================#
+konsole
+
+#=======================#
+# - Themes & Styling
+#=======================#
+surfn-xray-plasma-dark
+xray-nordic-kde
+#tolitica-plasma-theme
+xray-kde-dark
+vita-kde-dark
+vita7z-kde-theme
+arch-kde-theme
+#dtos-kde-theme
+#viper-kde-theme
+
+#########################################
+#       DESKTOP ENVIRONMENT: PLASMA END
+#########################################
